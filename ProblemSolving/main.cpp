@@ -347,6 +347,133 @@ void searchForRangeDriver() {
 	vector<int>nums{ 5,7,7,8,8,10 };
 	print1DVector(searchForRange(nums, 8));
 }
+int power(int base, int exponent, int mod) {
+	//This function works with negative values
+	if (exponent == 0) {
+		return 1;
+	}
+	int temp = power(base, exponent / 2, mod);
+	if (exponent % 2 == 0) {
+		return (temp * temp) % mod;
+	}
+	else {
+		if (exponent > 0)
+			return (base * temp * temp) % mod;
+		else
+			return ((temp * temp) / base) % mod;
+	}
+}
+void powerDriver() {
+	cout << "power=" << power(-1, 1, 20) << "\n";
+}
+bool isPalindrome(string& phrase) {
+	if (phrase.empty())
+		return false;
+	if (phrase.size() == 1)
+		return true;
+	int start = 0;
+	int end = phrase.size() - 1;
+
+	transform(phrase.begin(), phrase.end(),phrase.begin(), tolower);
+
+	while (start < end) {
+		if (isalnum(phrase[start]) && isalnum(phrase[end])) {
+			if (phrase[start] != phrase[end])
+				return false;
+			++start;
+			--end;
+		}
+		else if (isalnum(phrase[start])) {
+			--end;
+		}
+		else if (isalnum(phrase[end])) {
+			++start;
+		}
+	}
+	return true;
+}
+void isPalindromeDriver() {
+	string phrase1{ "A man, a plan, a canal: Panama" };
+	string phrase2{ "race a car" };
+	cout << phrase1 << "=" << isPalindrome(phrase1) << "\n";
+	cout << phrase2 << "=" << isPalindrome(phrase2) << "\n";
+}
+string reverseWord(string& word) {
+	int start = 0;
+	int end = word.size() - 1;
+	char c = ' ';
+
+	while (start < end) {
+		c = word[start];
+		word[start] = word[end];
+		word[end] = c;
+		++start;
+		--end;
+	}
+	return word;
+}
+string reverseString(string& phrase) {
+	if (phrase.empty())
+		return "";
+	int start = 0;
+	int end = phrase.size() - 1;
+	string reversed_string{ "" };
+
+	for (auto i = 0; i < phrase.size(); ++i) {
+		if (phrase[i] == ' ') {
+			end = i - 1;
+			reversed_string = reversed_string + " " +reverseWord(phrase.substr(start, end - start+1));
+			//cout << reversed_string << "\n";
+			while (i < phrase.size() && phrase[i] == ' ')
+				++i;
+			start = i;
+		}
+	}
+	reversed_string = reversed_string + " " + reverseWord(phrase.substr(start, phrase.size() - start+1));
+	reversed_string = reverseWord(reversed_string);
+	return reversed_string;
+}
+void reverseStringDriver() {
+	string s{ "the sky is blue" };
+	cout << reverseString(s) << "\n";
+}
+string longestPalindromicSubstring(string &s) {
+	int n = s.size();
+	int start = 0;
+	int max_len = 1;
+	vector<vector<bool>>palindromes(n,vector<bool>(n,false));
+	//Single letter palindromes
+	for (auto i = 0; i < n; ++i)
+		palindromes[i][i] = true;
+	//Two letter palindromes
+	for (auto i = 0; i < n - 1; ++i) {
+		if (s[i] == s[i + 1]) {
+			palindromes[i][i + 1] = true;
+			start = i;
+			max_len = 2;
+		}
+	}
+	//Three to n palindromes
+	int j = 0;
+	for (auto curr_len = 3; curr_len <= n; ++curr_len) {
+		for (auto i = 0; i < n - curr_len + 1; ++i) {
+			//j=last character
+			j = i + curr_len - 1;
+			//1.Check first and last characters
+			//2. Rest of string should be palindrome
+			if (s[i] == s[j] && palindromes[i + 1][j - 1]) {
+				palindromes[i][j] = true;
+				start = i;
+				max_len = curr_len;
+			}
+		}
+	}
+	return s.substr(start, max_len + 1);
+}
+void longestPalindromicSubstringDriver() {
+	string s{ "aaaabaaa" };
+	cout << "longestPalindromicSubstring=" << longestPalindromicSubstring(s) << "\n";
+}
 
 int main(int argc, char** argv) {
 	//setMatrixZeroesDriver();
@@ -359,7 +486,10 @@ int main(int argc, char** argv) {
 	//reverseIntegerDriver();
 	//rotatedSortedArraySearchDriver();
 	//squareRootDriver();
-	searchForRangeDriver();
-
+	//searchForRangeDriver();
+	//powerDriver();
+	//isPalindromeDriver();
+	//reverseStringDriver();
+	longestPalindromicSubstringDriver();
 	return 0;
 }
