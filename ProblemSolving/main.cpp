@@ -1,8 +1,10 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <string>
 
 using namespace std;
+
 template<typename T>
 void print2DVector(T& vec) {
 	for (auto row : vec) {
@@ -144,12 +146,220 @@ void nextPermutationDriver() {
 	print1DVector(num4);
 
 }
+vector<int>getPrime(int n) {
+	vector<int>result;
+	vector<bool>primes(n + 1, true);
+	for (auto prime = 2; prime*prime <= n; ++prime) {
+		if (primes[prime]) {
+			for (auto i = prime * 2; i <= n; i += prime)
+				primes[i] = false;
+		}
+	}
+	for (auto prime = 2; prime <= n; ++prime) {
+		if (primes[prime])
+			result.push_back(prime);
+	}
+	return result;
+}
+vector<int> primesum(int n) {
+	if (n < 4)
+		return {};
+	vector<int>prime_numbers = getPrime(n);
+	vector<int>result;
 
+	for (auto i = 0; i < prime_numbers.size(); ++i) {
+		for (auto j = 0; j < prime_numbers.size(); ++j) {
+			if (prime_numbers[i] + prime_numbers[j] == n) {
+				result.push_back(prime_numbers[i]);
+				result.push_back(prime_numbers[j]);
+				//returning only one result. To return all values
+				//comment out the return statement
+				return result;
+			}
+		}
+	}
+	return result;
+}
+void primesumDriver() {
+	print1DVector(primesum(4));
+}
+bool isPowerOfTwoInts(int n) {
+	if (n <= 1)
+		return true;
+	for (auto x = 2; x <= sqrt(n); ++x) {
+		auto power = x;
+		while (power <= n) {
+			power = power * x;
+			if (power == n)
+				return true;
+		}
+	}
+	return false;
+}
+void isPowerOfTwoIntsDriver() {
+	if (isPowerOfTwoInts(4))
+		cout << "true\n";
+	else
+		cout << "false\n";
+}
+int uniquePaths(int A, int B) {
+	if (A == 1 || B == 1)
+		return 1;
+	return uniquePaths(A - 1, B) + uniquePaths(A, B - 1);
+}
+void uniquePathsDriver() {
+	cout << "uniquePaths=" << uniquePaths(2, 2) << "\n";
+}
+int greatestCommonDivisor(int num1, int num2) {
+	if (num2 == 0)
+		return num1;
+	else
+		return greatestCommonDivisor(num2, num1%num2);
+}
+void greatestCommonDivisorDriver() {
+	cout << "greatestCommonDivisor=" << greatestCommonDivisor(9, 6) << "\n";
+}
+int reverseInteger(int num) {
+	long int sol = 0;
+
+	while (num != 0) {
+		sol = sol * 10 + (num % 10);
+		num = num / 10;
+	}
+
+	if (sol > INT_MAX || sol < INT_MIN) {
+		return 0;
+	}
+
+	return (int)sol;
+	/*string num_string = to_string(num);
+	bool is_neg = false;
+	if (num_string.size() > 1 && num_string[0] == '-')
+		is_neg = true;
+
+	int start = 0;
+	int end = num_string.size() - 1;
+	
+	while (start < end) {
+		swap(num_string[start], num_string[end]);
+		++start;
+		--end;
+	}
+	if (is_neg)
+		return stoi(num_string) * -1;
+	return stoi(num_string);*/
+}
+void reverseIntegerDriver() {
+	cout << reverseInteger(-123) << "\n";
+}
+int binarySearch(const vector<int>&nums,int start,int end, int val) {
+	int mid = 0;
+	while (start <= end) {
+		mid = (start + end) / 2;
+		//cout << "nums[mid]=" << nums[mid] << " val=" << val << "\n";
+		if (nums[mid] == val) {
+			return mid;// cout << "inside\n";
+		}
+		else if (nums[mid] < val)
+			start = mid + 1;
+		else
+			end = mid - 1;
+	}
+	return -1;
+}
+int findPivot(const vector<int>& nums) {
+	int start = 0;
+	int end = nums.size() - 1;
+	int mid = 0;
+
+	while (start <= end) {
+		mid = (start + end) / 2;
+		if (nums[mid] > nums[mid + 1])
+			return mid + 1;
+		else if (nums[start] < nums[mid])
+			start = mid + 1;
+		else
+			end = mid - 1;
+	}
+	return -1;
+}
+int rotatedSortedArraySearch(const vector<int>& nums, int val) {
+	int pivot = findPivot(nums);
+	if (pivot == -1)
+		return pivot;
+	
+	int right = binarySearch(nums, pivot + 1, nums.size()-1, val);
+	int left =  binarySearch(nums, 0, pivot - 1, val);
+
+	return (right != -1) ? right : left;
+}
+void rotatedSortedArraySearchDriver() {
+	vector<int>nums{ 4, 5, 6, 7, 0, 1, 2 };
+	cout << "rotatedSortedArraySearch=" << rotatedSortedArraySearch(nums, 4) << "\n";
+}
+int squareRoot(int num) {
+	if (num == 0 || num == 1)
+		return num;
+	int start = 0;
+	int end = num;
+	int mid = (start + end) / 2;
+	int answer = 0;
+
+	while (start <= end) {
+		mid = (start + end) / 2;
+		if (mid*mid == num) {
+			return mid;
+		}
+		else if (mid*mid < num) {
+			start = mid + 1;
+			answer = mid;
+		}
+		else {
+			end = mid - 1;
+		}
+	}
+	return answer;
+}
+void squareRootDriver() {
+	cout << "squareRoot=" << squareRoot(50) << "\n";
+}
+vector<int> searchForRange(const vector<int>& nums, int val) {
+	int pivot = binarySearch(nums, 0, nums.size() - 1, val);
+	int left = binarySearch(nums, 0, pivot - 1, val);
+	int right = binarySearch(nums, pivot + 1, nums.size() - 1,val);
+
+	vector<int>result;
+	if (pivot == -1)
+		return { -1,-1 };
+
+	if (left != -1) {
+		result.push_back(left);
+		result.push_back(pivot);
+	}
+	else {
+		result.push_back(pivot);
+		result.push_back(right);
+	}
+
+	return result;
+}
+void searchForRangeDriver() {
+	vector<int>nums{ 5,7,7,8,8,10 };
+	print1DVector(searchForRange(nums, 8));
+}
 
 int main(int argc, char** argv) {
 	//setMatrixZeroesDriver();
 	//rotateMatrixDriver();
 	//nextPermutationDriver();
+	//primesumDriver();
+	//isPowerOfTwoIntsDriver();
+	//uniquePathsDriver();
+	//greatestCommonDivisorDriver();
+	//reverseIntegerDriver();
+	//rotatedSortedArraySearchDriver();
+	//squareRootDriver();
+	searchForRangeDriver();
 
 	return 0;
 }
