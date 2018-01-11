@@ -474,8 +474,300 @@ void longestPalindromicSubstringDriver() {
 	string s{ "aaaabaaa" };
 	cout << "longestPalindromicSubstring=" << longestPalindromicSubstring(s) << "\n";
 }
+int getRoman(char c) {
+	switch (c) {
+	case 'I':
+		return 1;
+	case 'V':
+		return 5;
+	case 'X':
+		return 10;
+	case 'L':
+		return 50;
+	case 'C':
+		return 100;
+	case 'D':
+		return 500;
+	case 'M':
+		return 1000;
+	default:
+		return -1;
+	}
+}
+int romanToInteger(string& A) {
+	int result = 0;
+	int s1 = 0;
+	int s2 = 0;
+
+	for (int i = 0; i < A.size(); ++i) {
+		s1 = getRoman(A[i]);
+		if (i + 1 < A.size()) {
+			s2 = getRoman(A[i + 1]);
+			if (s1 >= s2)
+				result = result + s1;
+			else {
+				result = result + s2 - s1;
+				++i;
+			}
+		}
+		else {
+			result = result + s1;
+			++i;
+		}
+	}
+	return result;
+}
+void romanToIntegerDriver() {
+	string roman{ "XIV" };
+	cout << "romanToInteger=" << romanToInteger(roman) << "\n";
+}
+int strstr(const string& needle, const string& haystack) {
+	//find a substring ( needle ) in a string ( haystack ).
+	if (needle.empty() || haystack.empty())
+		return -1;
+	int curr = 0;
+	int count = 0;
+	int temp_counter = 0;
+	for (auto i = 0; i < haystack.size(); ++i) {
+		if (haystack[i] == needle[curr]) {
+			count = 0;
+			temp_counter = i;
+			for (auto j = 0; j < needle.size(); ++j) {
+				if (haystack[temp_counter] == needle[j])
+					++count;
+				else
+					--count;
+				++temp_counter;
+			}
+			if (count == needle.size())
+				return i;
+		}
+
+	}
+	return -1;
+}
+void strstrDriver() {
+	string needle{ "hello" };
+	string haystack{ "world hello" };
+	cout << "strstr=" << strstr(needle, haystack) << "\n";
+}
+bool isNumbericChar(char c) {
+	return (c >= '0' && c <= '9') ? true : false;
+}
+int stringToInteger(string& num) {
+	if (num.empty())
+		return 0;
+	int result = 0;
+	int sign = 1;
+	int i = 0;
+
+	//if number is negative, update sign
+	if (num[0] == '-') {
+		sign = -1;
+		++i;
+	}
+	for (; i < num.size(); ++i) {
+		if (!isNumbericChar(num[i]))
+			return 0;
+		result = result * 10 + num[i] - '0';
+	}
+	return result * sign;
+}
+void stringToIntegerDriver() {
+	string num{ "1028" };
+	cout << "stringToInteger=" << stringToInteger(num) << "\n";
+}
+int singleNumberI(vector<int>& nums) {
+	if (nums.empty())
+		return 0;
+	int result = nums[0];
+
+	for (auto i = 1; i < nums.size(); ++i) {
+		result = result ^ nums[i];
+	}
+	return result;
+}
+void singleNumberIDriver() {
+	vector<int>nums{ 1, 2, 2, 3, 1 };
+	cout << "singleNumberI=" << singleNumberI(nums) << "\n";
+}
+int singleNumberII(vector<int>& nums) {
+	int ones = 0;
+	int twos = 0;
+	int bit_mask = 0;
+
+	for (int i = 0; i < nums.size(); ++i) {
+		twos = twos | (ones & nums[i]);
+		ones = ones ^ nums[i];
+		bit_mask = ~(ones & twos);
+		ones = ones & bit_mask;
+		twos = twos & bit_mask;
+	}
+	return ones;
+}
+void singleNumberIIDriver() {
+	vector<int>nums{ 1, 2, 4, 3, 3, 2, 2, 3, 1, 1 };
+	cout << "singleNumberII=" << singleNumberII(nums) << "\n";
+}
+unsigned int reverseBits(unsigned int num) {
+	unsigned int count = sizeof(num) * 8 - 1;
+	unsigned int reverse_num = num;
+
+	num = num >> 1;
+	while (num)
+	{
+		reverse_num = reverse_num << 1;
+		reverse_num = reverse_num | num & 1;
+		num = num >> 1;
+		count--;
+	}
+	reverse_num = reverse_num  << count;
+	return reverse_num;
+}
+void reverseBitsDriver() {
+	cout << "reverseBits=" << reverseBits(3) << "\n";
+}
+int divideTwoInts(int dividend, int divisor) {
+	long long n = dividend, m = divisor;
+	// determine sign of the quotient
+	int sign = n < 0 ^ m < 0 ? -1 : 1;
+	// remove sign of operands
+	n = abs(n), m = abs(m);
+	// q stores the quotient in computation
+	long long q = 0;
+	// test down from the highest bit
+	// accumulate the tentative value for valid bits
+	for (long long t = 0, i = 31; i >= 0; i--)
+		if (t + (m << i) <= n)
+			t += m << i, q |= 1LL << i;
+	// assign back the sign
+	if (sign < 0) q = -q;
+	// check for overflow and return
+	return q >= INT_MAX || q < INT_MIN ? INT_MAX : q;
+}
+void divideTwoIntsDriver() {
+	cout << "divideTwoInts=" << divideTwoInts(18, 3) << "\n";
+}
+int findMinXORPair(vector<int> &nums) {
+	sort(nums.begin(), nums.end());
+	int min_xor = INT_MAX;
+	int val = 0;
+
+	for (auto i = 0; i < nums.size()-1; ++i) {
+		val = nums[i] ^ nums[i + 1];
+		min_xor = min(min_xor, val);
+	}
+	return min_xor;
+}
+void findMinXORPairDriver() {
+	vector<int>nums{ 0, 2, 5, 7 };
+	cout << "findMinXORPair=" << findMinXORPair(nums) << "\n";
+}
+int removeDuplicatesFromSortedArray(vector<int>& nums) {
+	if (nums.size() <= 1)
+		return nums.size();
+
+	int j = 0;
+	for (auto i = 0; i < nums.size()-1; ++i) {
+		//This will only copy the unique values
+		//since j is not moving, the duplicate
+		//will get overriden
+		if (nums[i] != nums[i + 1]) {
+			nums[j] = nums[i];
+			++j;
+		}
+	}
+	//copy over last value
+	nums[j] = nums[nums.size() - 1];
+	//increase j will get us the size, although
+	//we could just return nums.size() after popping
+	//duplicate value
+	++j;
+	nums.pop_back();
+	return j;
+}
+void removeDuplicatesFromSortedArrayDriver() {
+	vector<int>nums{ 1,1,2 };
+	print1DVector(nums);
+	cout << "removeDuplicatesFromSortedArray=" << removeDuplicatesFromSortedArray(nums) << "\n";
+	print1DVector(nums);
+}
+int threeSum(vector<int>& A, int B) {
+	if (A.size() <= 2)
+		return -1;
+	if (A.size() == 3)
+		return A[0] + A[1] + A[2];
+
+	sort(A.begin(), A.end());
+	int start = 0;
+	int end = A.size() - 1;
+	int curr_sum = 0;
+	int min_diff = INT_MAX;
+	int curr_diff = 0;
+	int closest_sum = 0;
+	for (int i = 0; i<A.size() - 2; i++) {
+		start = i + 1;
+		end = A.size() - 1;
+		while (start < end) {
+			curr_sum = A[i] + A[start] + A[end];
+			curr_diff = abs(curr_sum - B);
+			if (curr_diff == 0) {
+				return B;
+			}
+			if (curr_diff < min_diff) {
+				min_diff = curr_diff;
+				closest_sum = curr_sum;
+			}
+			if (curr_sum < B)
+				++start;
+			else
+				--end;
+		}
+	}
+	return closest_sum;
+}
+void threeSumDriver() {
+	vector<int>nums{ -1,2,1,-4 };
+	cout << "threeSum=" << threeSum(nums, 1) << "\n";
+}
+void mergeSortedArrays(vector<int>&A, vector<int>&B) {
+	int index_a = A.size() - 1;
+	int index_b = B.size() - 1;
+	int new_size = A.size() + B.size();
+	A.resize(new_size);
+	--new_size;
+	while (index_a >= 0 && index_b >= 0) {
+		if (A[index_a] > B[index_b]) {
+			A[new_size] = A[index_a];
+			--index_a;
+		}
+		else {
+			A[new_size] = B[index_b];
+			--index_b;
+		}
+		--new_size;
+	}
+	while (index_a >= 0) {
+		A[new_size] = A[index_a];
+		--index_a;
+		--new_size;
+	}
+	while (index_b >= 0) {
+		A[new_size] = B[index_b];
+		--index_b;
+		--new_size;
+	}
+}
+void mergeSortedArraysDriver() {
+	vector<int>nums1{ 1,5,8 };
+	vector<int>nums2{ 6,9 };
+	print1DVector(nums1);
+	mergeSortedArrays(nums1, nums2);
+	print1DVector(nums1);
+}
 
 int main(int argc, char** argv) {
+	
 	//setMatrixZeroesDriver();
 	//rotateMatrixDriver();
 	//nextPermutationDriver();
@@ -490,6 +782,18 @@ int main(int argc, char** argv) {
 	//powerDriver();
 	//isPalindromeDriver();
 	//reverseStringDriver();
-	longestPalindromicSubstringDriver();
+	//longestPalindromicSubstringDriver();
+	//romanToIntegerDriver();
+	//strstrDriver();
+	//stringToIntegerDriver();
+	//singleNumberIDriver();
+	//singleNumberIIDriver();
+	//reverseBitsDriver();
+	//divideTwoIntsDriver();
+	//findMinXORPairDriver();
+	//removeDuplicatesFromSortedArrayDriver();
+	//threeSumDriver();
+	mergeSortedArraysDriver();
+
 	return 0;
 }
