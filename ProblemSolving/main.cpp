@@ -2,6 +2,8 @@
 #include <vector>
 #include <algorithm>
 #include <string>
+#include <stack>
+#include <deque>
 
 using namespace std;
 
@@ -765,6 +767,558 @@ void mergeSortedArraysDriver() {
 	mergeSortedArrays(nums1, nums2);
 	print1DVector(nums1);
 }
+int arrayThreePointers(const vector<int>&A, const vector<int>&B, const vector<int>&C) {
+	//find three closest elements from given arrays
+	int min_diff = INT_MAX;
+	int res_i = 0, res_j = 0, res_k = 0;
+	int i = 0, j = 0, k = 0;
+	int maximum = 0, minimum = 0;
+
+	while (i < A.size() && j < B.size() && k < C.size()) {
+		//find min and max of current elements
+		minimum = min(A[i], min(B[j], C[k]));
+		maximum = max(A[i], max(B[j], C[k]));
+		//if is smallest diff, update min_diff
+		if ((maximum - minimum) < min_diff) {
+			res_i = i, res_j = j, res_k = k;
+			min_diff = maximum - minimum;
+		}
+		//because we're getting absolute values,
+		//the smallest value we can get is 0
+		if (min_diff == 0)
+			break;
+		//increase the index of array with smallest
+		//(minimum) value because we want the smallest
+		//difference
+		if (A[i] == minimum)
+			++i;
+		else if (B[j] == minimum)
+			++j;
+		else
+			++k;
+	}
+	cout << A[res_i] << " " << B[res_j] << " " << C[res_k] << "\n";
+	return max(abs(A[res_i] - B[res_j]), max(abs(B[res_j] - C[res_k]), abs(C[res_k] - A[res_i])));
+}
+void arrayThreePointersDriver() {
+	vector<int>A{ 1,4,10 };
+	vector<int>B{ 2,15,20 };
+	vector<int>C{ 10,12 };
+	cout << "arrayThreePointers=" << arrayThreePointers(A, B, C) << "\n";
+}
+struct ListNode {
+	int val;
+	ListNode *next;
+	ListNode(int x) : val(x), next(nullptr) {}
+};
+void printLinkedList(ListNode*head) {
+	while (head != nullptr) {
+		cout << head->val << ",";
+		head = head->next;
+	}
+	cout << "\n";
+}
+ListNode* reverseListBetween(ListNode*A, int m, int n) {
+	ListNode* curr = A;
+	ListNode* prev = NULL;
+	ListNode* temp = NULL;
+	ListNode* start = NULL;
+	ListNode* startTemp = NULL;
+	ListNode* end = NULL;
+	ListNode* endTemp = NULL;
+
+	if (A == NULL) {
+		return NULL;
+	}
+
+	int length = 0;
+
+	while (length < m) {
+		length++;
+		if (length == m - 1) {
+			start = curr;
+		}
+		else if (length == m) {
+			startTemp = curr;
+		}
+		prev = curr;
+		curr = curr->next;
+	}
+
+	while (length < n) {
+		temp = curr->next;
+		curr->next = prev;
+		prev = curr;
+		curr = temp;
+		length++;
+		if (length == n) {
+			endTemp = prev;
+			end = curr;
+			startTemp->next = end;
+			if (start != NULL) {
+				start->next = endTemp;
+			}
+			else if (start == NULL) {
+				A = endTemp;
+			}
+		}
+	}
+
+	return A;
+}
+void reverseListBetweenDriver() {
+	ListNode* head = new ListNode(1);
+	ListNode* two = new ListNode(2);
+	ListNode* three = new ListNode(3);
+	ListNode* four = new ListNode(4);
+	ListNode* five = new ListNode(5);
+
+	head->next = two;
+	two->next = three;
+	three->next = four;
+	four->next = five;
+	printLinkedList(head);
+
+	head = reverseListBetween(head, 2, 4);
+	printLinkedList(head);
+}
+ListNode* reverseLinkedList(ListNode* head) {
+	if (head == nullptr)
+		return nullptr;
+	ListNode*prev = nullptr;
+	ListNode*curr = head;
+	ListNode*next = head->next;
+
+	while (curr != nullptr) {
+		next = curr->next;
+		curr->next = prev;
+		prev = curr;
+		curr = next;
+	}
+	return prev;
+}
+ListNode* reverseLinkedListRange(ListNode* head, int start, int end) {	
+	//find head
+	ListNode*new_head = head;
+	ListNode*prev_list = head;
+	int count = 0;
+	while (new_head->val != start) {
+		prev_list = new_head;
+		new_head = new_head->next;
+		++count;
+	}
+	//find tail
+	ListNode*new_tail = new_head;
+	while (new_tail->val != end)
+		new_tail = new_tail->next;
+	//capture rest of list
+	ListNode*rest_list = new_tail->next;
+	//reverse list
+	new_tail->next = nullptr;
+	
+	if (count == 0) {
+		head = reverseLinkedList(new_head);
+		new_head->next = rest_list;
+	}
+	else {
+		prev_list->next = reverseLinkedList(new_head);
+		new_head->next = rest_list;
+	}
+
+	return head;
+}
+void reverseLinkedListDriver() {
+	ListNode* head = new ListNode(1);
+	ListNode* two = new ListNode(2);
+	ListNode* three = new ListNode(3);
+	ListNode* four = new ListNode(4);
+	ListNode* five = new ListNode(5);
+
+	head->next = two;
+	two->next = three;
+	three->next = four;
+	four->next = five;
+	printLinkedList(head);
+
+	head = reverseLinkedListRange(head,2,4);
+	printLinkedList(head);
+}
+ListNode* removeDuplicates(ListNode* head) {
+	if (head == nullptr || head->next == nullptr)
+		return head;
+
+	ListNode* curr = head;
+	ListNode* third = nullptr;
+
+	//first=curr, second=curr->next, third=curr->next->next
+	while (curr->next != nullptr) {
+		if (curr->val == curr->next->val) {
+			//capture third
+			third = curr->next->next;
+			//delete second
+			delete curr->next;
+			//second is now third
+			curr->next = third;
+		}
+		else {
+			//only advance if no duplicates
+			curr = curr->next;
+		}
+		
+	}
+	return head;
+}
+void removeDuplicatesDriver() {
+	ListNode* head = new ListNode(1);
+	ListNode* two = new ListNode(1);
+	ListNode* three = new ListNode(2);
+	ListNode* four = new ListNode(3);
+	ListNode* five = new ListNode(3);
+
+	head->next = two;
+	two->next = three;
+	three->next = four;
+	four->next = five;
+	printLinkedList(head);
+
+	head = removeDuplicates(head);
+	printLinkedList(head);
+}
+void insertionSort(vector<int>& nums) {
+	if (nums.size() <= 1)
+		return;
+	int sorted_index = 0;
+	int temp = 0;
+	int j = 0;
+
+	for (auto i = 1; i < nums.size(); ++i) {
+		if (nums[i] < nums[sorted_index]) {
+			swap(nums[i], nums[sorted_index]);
+			j = sorted_index;
+			while (j > 0 && nums[j] < nums[j - 1]) {				
+				swap(nums[j], nums[j - 1]);				
+				--j;
+			}
+		}
+		++sorted_index;
+	}
+}
+void insertionSortDriver() {
+	vector<int>nums{ 7,4,2,5,3 };
+	print1DVector(nums);
+	insertionSort(nums);
+	print1DVector(nums);
+}
+ListNode* sortedInsert(ListNode* sorted, ListNode* insert) {
+	ListNode* curr = nullptr;
+	if (sorted == nullptr || sorted->val >= insert->val) {
+		insert->next = sorted;
+		sorted = insert;
+	}
+	else {
+		curr = sorted;
+		while (curr->next != nullptr && curr->next->val < insert->val) {
+			curr = curr->next;
+		}
+		insert->next = curr->next;
+		curr->next = insert;
+	}
+	return sorted;
+}
+ListNode* insertionSortList(ListNode* head) {
+	if (head == nullptr || head->next == nullptr)
+		return head;
+
+	ListNode* sorted = nullptr;
+	ListNode* curr = head;
+	ListNode* next = nullptr;
+
+	while (curr != nullptr) {
+		next = curr->next;
+		sorted = sortedInsert(sorted, curr);
+		curr = next;
+	}
+	return sorted;
+}
+void insertionSortListDriver() {
+	ListNode* head = new ListNode(7);
+	ListNode* two = new ListNode(2);
+	ListNode* three = new ListNode(4);
+	ListNode* four = new ListNode(5);
+	ListNode* five = new ListNode(3);
+
+	head->next = two;
+	two->next = three;
+	three->next = four;
+	four->next = five;
+	printLinkedList(head);
+
+	head = insertionSortList(head);
+	printLinkedList(head);
+}
+ListNode* detectCycle(ListNode* head) {
+	//another way of keeping track of elements
+	//would be to create an unordered set and when
+	//i find same value, return it
+	/*	if (A == NULL || A->next == NULL)
+	    return NULL;
+    unordered_set<ListNode*>s;
+    while(A != NULL){
+        if(s.find(A) != s.end())
+            return A;
+        s.insert(A);
+        A = A->next;
+    }
+    return NULL;*/
+	if (head == nullptr || head->next == nullptr)
+		return nullptr;
+
+	ListNode* curr = head;
+	ListNode* fast = head->next;
+
+	while (curr != nullptr && fast != nullptr && fast->next != nullptr) {
+		if (curr->val == fast->val)
+			return curr;
+		curr = curr->next;
+		fast = fast->next->next;
+	}
+	return nullptr;
+}
+void detectCycleDriver() {
+	ListNode* head = new ListNode(1);
+	ListNode* two = new ListNode(2);
+	ListNode* three = new ListNode(3);
+	ListNode* four = new ListNode(4);
+	ListNode* five = new ListNode(5);
+
+	head->next = two;
+	two->next = three;
+	three->next = four;
+	four->next = five;
+	five->next = three;
+	//printLinkedList(head);
+
+	ListNode* temp = detectCycle(head);
+	if (temp == nullptr)
+		cout << "no cycles\n";
+	else
+		cout << temp->val << "\n";
+}
+ListNode* addTwoNumbers(ListNode* num1, ListNode* num2) {
+	ListNode* result = nullptr;
+	ListNode* prev = nullptr;
+	ListNode* temp = nullptr;
+	int sum = 0, carry_over = 0;
+	while (num1 != nullptr || num2 != nullptr) {
+		//sum is carry + num1 (if there's one) + num2 (if there's one)
+		sum = carry_over + (num1 ? num1->val : 0) + (num2 ? num2->val : 0);
+		//set carry over to 1 if >= 10
+		carry_over = (sum >= 10) ? 1 : 0;
+		//get remainder
+		sum = sum % 10;
+		//first node, make it head(result)
+		temp = new ListNode(sum);
+		if (result == nullptr)
+			result = temp;
+		//otherwise add it to the list
+		else
+			prev->next = temp;
+
+		prev = temp;
+		//move only if exists
+		if (num1) num1 = num1->next;
+		if (num2) num2 = num2->next;
+	}
+	//last carry
+	if (carry_over > 0)
+		temp->next = new ListNode(carry_over);
+	return result;
+}
+void addTwoNumbersDriver() {
+	ListNode* num1 = new ListNode(2);
+	ListNode* four = new ListNode(4);
+	ListNode* three = new ListNode(3);
+	num1->next = four;
+	four->next = three;
+	printLinkedList(num1);
+
+	ListNode* num2 = new ListNode(5);
+	ListNode* six = new ListNode(6);
+	ListNode* four_2 = new ListNode(4);
+	num2->next = six;
+	six->next = four_2;
+	printLinkedList(num2);
+
+	ListNode* sum = addTwoNumbers(num1, num2);
+	printLinkedList(sum);
+
+}
+void reverseStringStack(string& word) {
+	stack<char>reverse;
+	for (auto c : word)
+		reverse.push(c);
+	int i = 0;
+	while (!reverse.empty()) {
+		word[i] = reverse.top();
+		reverse.pop();
+		++i;
+	}
+}
+void reverseStringStackDriver() {
+	string word{ "Hello World!" };
+	cout << word << "\n";
+	reverseStringStack(word);
+	cout << word << "\n";
+}
+bool validParenthesis(string& A) {
+	stack<char>s;
+	for (int i = 0; i < A.size(); ++i) {
+		if (A[i] == '(' || A[i] == '{' || A[i] == '[') {
+			if (A[i] == '(')
+				s.push(')');
+			if (A[i] == '{')
+				s.push('}');
+			if (A[i] == '[')
+				s.push(']');
+		}
+		else {
+			if (s.empty())
+				return false;
+			if (A[i] == s.top())
+				s.pop();
+			else
+				return false;
+		}
+	}
+	if (!s.empty())
+		return false;
+	return true;
+}
+void validParenthesisDriver() {
+	string parens{"()[]{}"};
+	string parens2{ "([)]" };
+	string parens3{ ")[]{}" };
+
+	cout << parens << "should be 1=" << validParenthesis(parens) << "\n";
+	cout << parens2 << "should be 0=" << validParenthesis(parens2) << "\n";
+	cout << parens3 << "should be 0=" << validParenthesis(parens3) << "\n";
+}
+bool redundantParens(string& expression) {
+	stack<char> s;
+    auto size = expression.length();
+    auto i = 0;
+    while(i<size)
+    {
+        char c = expression[i];
+        if (c == '(' || c == '+' || c == '*' || c == '-' || c == '/')
+            s.push(c);
+        else if (c == ')')
+        {
+            if (s.top() == '(')
+                return true;
+            else
+            {
+                while (!s.empty() && s.top() != '(')
+                    s.pop();
+                s.pop();
+            }
+        }
+        ++i;
+    }
+	return false;
+}
+void redundantParensDriver() {
+	string incorrect{ "(((a+(b))+c+d))" };
+	string correct{ "((a+b)+(c+d))" };
+	string third{ "(((a+(b))+(c+d)))" };
+
+	cout << "correct should be 0=" << redundantParens(correct) << "\n";
+	cout << "incorrect should be 1=" << redundantParens(incorrect) << "\n";
+	cout << "third should be 1=" << redundantParens(third) << "\n";
+}
+vector<int> slidingMaximum(const vector<int> &A, int B) {
+	vector<int>result;
+	//stores array elements indexes
+	deque<int>q(B);
+	//process first window
+	int i = 0;
+	for (i = 0; i < B; ++i) {
+		//remove smaller elements
+		while (!q.empty() && A[i] >= A[q.back()])
+			q.pop_back();
+		//add new element
+		q.push_back(i);
+	}
+	//process the rest
+	for (; i < A.size(); ++i) {
+		//element if front is largest
+		result.push_back(A[q.front()]);
+		//remove elements out of current window
+		while ((!q.empty()) && q.front() <= i - B)
+			q.pop_front();
+		//remove smaller elements
+		while ((!q.empty()) && A[i] >= A[q.back()])
+			q.pop_back();
+		//add current element
+		q.push_back(i);
+	}
+	//last window's element
+	result.push_back(A[q.front()]);
+	return result;
+}
+void slidingMaximumDriver() {
+	vector<int>nums{ 1,3,-1,-3,5,3,6,7 };
+	print1DVector(slidingMaximum(nums, 3));
+}
+class MinStack {
+private:
+	stack<int>s;
+	stack<int>m;
+public:
+	void push(int val) {
+		if (m.empty())
+			m.push(val);
+		else if (val < m.top())
+			m.push(val);
+		else if (val > m.top())
+			m.push(m.top());
+		s.push(val);
+	}
+	void pop() {
+		if (!s.empty()) {
+			s.pop();
+			m.pop();
+		}
+	}
+	int top() {
+		if (s.empty())
+			return -1;
+		return s.top();
+	}
+	int getMin() {
+		if (m.empty())
+			return -1;
+		return m.top();
+	}
+};
+void minStackDriver() {
+	MinStack ms;
+	ms.push(1);
+	ms.push(2);
+	ms.push(3);
+	ms.push(4);
+	ms.push(5);
+
+	cout << "top=" << ms.top() << "\n";
+	cout << "getMin=" << ms.getMin() << "\n";
+	ms.pop();
+	cout << "top=" << ms.top() << "\n";
+	cout << "getMin=" << ms.getMin() << "\n";
+	ms.push(0);
+	cout << "top=" << ms.top() << "\n";
+	cout << "getMin=" << ms.getMin() << "\n";
+
+}
 
 int main(int argc, char** argv) {
 	
@@ -793,7 +1347,20 @@ int main(int argc, char** argv) {
 	//findMinXORPairDriver();
 	//removeDuplicatesFromSortedArrayDriver();
 	//threeSumDriver();
-	mergeSortedArraysDriver();
+	//mergeSortedArraysDriver();
+	//arrayThreePointersDriver();
+	//reverseListBetweenDriver();
+	//reverseLinkedListDriver();
+	//removeDuplicatesDriver();
+	//insertionSortDriver();
+	//insertionSortListDriver();
+	//detectCycleDriver();
+	//addTwoNumbersDriver();
+	//reverseStringStackDriver();
+	//validParenthesisDriver();
+	//redundantParensDriver();
+	//slidingMaximumDriver();
+	minStackDriver();
 
 	return 0;
 }
