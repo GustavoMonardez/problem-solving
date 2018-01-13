@@ -1652,16 +1652,6 @@ vector<int> findSubstring(string A, const vector<string> &B) {
 void findSubstringDriver() {
 
 }
-vector<vector<int>> anagrams(const vector<string> &A) {
-
-	for (auto i = 0; i < A.size(); ++i) {
-
-		for (auto j = 0; j < A[i].size(); ++j) {
-
-		}
-	}
-	return { {} };
-}
 int lengthOfLongestSubstring(string A) {
 	unordered_set<char>s;
 	int max_len = 0;
@@ -1700,6 +1690,352 @@ void lengthOfLongestSubstringDriver() {
 	string s{ "bbbbb" };
 	cout << "lengthOfLongestSubstring=" << lengthOfLongestSubstring(s) << "\n";
 }
+bool usedInRow(vector<vector<char>>& grid, int row, int num) {
+	for (auto col = 0; col < grid[row].size(); ++col) {
+		if (grid[row][col] == num)
+			return true;
+	}
+	return false;
+}
+bool usedInCol(vector<vector<char>>& grid, int col, int num) {
+	for (auto row = 0; row < grid.size(); ++row) {
+		if (grid[row][col] == num)
+			return true;
+	}
+	return false;
+}
+bool usedInBox(vector<vector<char>>& grid, int box_start_row,int box_start_col, int num) {
+	int box_size = 3;
+	for (auto row = 0; row < box_size; ++row) {
+		for (auto col = 0; col < box_size; ++col) {
+			if (grid[row+box_start_row][col+box_start_col] == num)
+				return true;
+		}
+	}
+	return false;
+}
+bool isSudokuSafe(vector<vector<char>>& grid, int row, int col, int num) {
+	//row - row%3 gets us the first row of the particular box. same for cols.
+	return !usedInRow(grid, row, num) &&
+		   !usedInCol(grid, col, num) &&
+		   !usedInBox(grid, row - row % 3, col - col % 3, num);
+}
+bool emptyGridLocation(vector<vector<char>>& grid, int &row, int &col) {
+	for (row = 0; row < grid.size(); ++row) {
+		for (col = 0; col < grid[row].size(); ++col) {
+			if (grid[row][col] == '.')
+				return true;
+		}
+	}
+	return false;
+}
+bool solveSudokuHelper(vector<vector<char>> &grid) {
+	int row = 0, col = 0;
+	//if no more empty spots
+	if (!emptyGridLocation(grid, row, col))
+		return true;
+	for (auto num = 1; num <= 9; ++num) {
+		if (isSudokuSafe(grid, row, col, num)) {
+			//choose
+			grid[row][col] = num + '0'; cout << num + '0' << "\n";
+			//explore
+			if (solveSudokuHelper(grid))
+				return true;
+			//unchoose
+			grid[row][col] = '.';
+		}
+	}
+	return false;
+}
+void solveSudoku(vector<vector<char>> &A) {
+	if (solveSudokuHelper(A)) {
+		cout << "success\n";
+		print2DVector(A);
+	}
+	else
+		cout << "something went wrong\n";
+}
+void solveSudokuDriver() {
+	//vector<vector<char>>grid{{"53..7...."},{"6..195..."},{".98....6."},{"8...6...3"},{"4..8.3..1"},{"7...2...6"},{".6....28."},{"...419..5"},{"....8..79"} };
+	//vector<vector<char>>grid{ { '5'},{'3'}, {'.'}, {'.'}, {'7'},{ '.' },{ '.' },{ '.' },{ '.' } };
+	vector<vector<char>>grid(9, vector<char>(9, '.'));
+	solveSudoku(grid);
+}
+int maxPoints(vector<int> &A, vector<int> &B) {
+	unordered_map<double, int>map;
+	int max_points = 0;
+	int duplicate = 1;
+	int vertical = 0;
+
+	for (auto i = 0; i < A.size(); ++i) {
+		duplicate = 1;
+		vertical = 0;
+		for (auto j = i + 1; j < A.size(); ++j) {
+			if (A[i] == A[j]) {
+				if (A[i] == B[j])
+					++duplicate;
+				else
+					++vertical;
+			}
+			else {
+				double slope = 0.0;
+				double x = A[j] - A[i];
+				double y = B[j] - B[i];
+				if (B[j] != B[i])
+					slope = (1.0 * (y / x));
+				if (map.find(slope) != map.end())
+					++map[slope];
+				else
+					map[slope] = 1;
+			}
+		}
+		auto it = map.begin();
+		while (it != map.end()) {
+			int t = it->second;
+			if ((t + duplicate) > max_points) {
+				max_points = t + duplicate;
+			}
+			it++;
+		}
+		if ((vertical + duplicate) > max_points) {
+			max_points = vertical + duplicate;
+		}
+		map.clear();
+	}
+	return max_points;
+}
+void maxPointsDriver() {
+	vector<int>x{ 1,1 };
+	vector<int>y{ 2,2 };
+	cout << "maxPoints=" << maxPoints(x, y) << "\n";
+}
+vector<vector<int>> findAnagrams(const vector<string> &A) {
+	vector<vector<int>>result;
+	vector<string>row;
+	unordered_map<string, vector<int>>anagram;
+	//sort letters of each word and copy them to an
+	//aux container (row)
+	for (auto i = 0; i < A.size(); ++i) {
+		string temp{};
+		temp.append(A[i]);
+		sort(temp.begin(), temp.end());
+		row.push_back(temp);
+	}
+	//for each word, push indexes where they're found
+	//because maps don't accept duplicates it will push
+	//the each index of the same word into the same vector
+	for (auto i = 0; i < A.size(); ++i) {
+		anagram[row[i]].push_back(i + 1);
+	}
+	//final step is to copy over those vectors containing indexes
+	//into our result 2D vector
+	for (auto it = anagram.begin(); it != anagram.end(); ++it) {
+		result.push_back(it->second);
+	}
+
+	return result;
+}
+void findAnagramsDriver() {
+	vector<string>words{ {"cat"}, {"dog"},{"god"}, {"tca"} };
+	print2DVector(findAnagrams(words));
+}
+string minWindow(string& s, string& pattern) {
+	if (s.size() < pattern.size())
+		return "";
+
+	unordered_map<char, int>strings{};
+	unordered_map<char, int>all_patterns{};
+
+	//store characters and their occurrence
+	for (auto i = 0; i < pattern.size(); ++i)
+		++all_patterns[pattern[i]];
+	
+	int start = 0, start_index = -1, min_len = INT_MAX, count=0;
+
+	for (auto i = 0; i < s.size(); ++i) {
+		//store characters and their occurrence
+		++strings[s[i]];
+		//if we find match increase count
+		if (all_patterns[s[i]] != 0 && strings[s[i]] <= all_patterns[s[i]])
+			++count;
+		//we found window
+		if (count == pattern.size()) {
+			//if some characters occur more often than patterns, then
+			//remove them to get smaller window
+			while (strings[s[start]] > all_patterns[s[start]] || all_patterns[s[start]] == 0) {
+				if (strings[s[start]] > all_patterns[s[start]])
+					--strings[s[start]];
+				++start;
+			}
+			//update window size
+			int window_len = i - start + 1;
+			if (min_len > window_len) {
+				min_len = window_len;
+				start_index = start;
+			}
+		}
+	}
+	if (start_index == -1)
+		return "";
+	return s.substr(start_index, min_len);
+}
+void minWindowDriver() {
+	string s{ "ADOBECODEBANC" };
+	string pattern{ "ABC" };
+	cout << minWindow(s, pattern) << "\n";
+}
+ListNode* mergeKSortedLists(vector<ListNode*> &lists) {
+	vector<int>values;
+	for (auto i = 0; i < lists.size(); ++i) {
+		ListNode* curr = lists[i];
+		while (curr) {
+			values.push_back(curr->val);
+			curr = curr->next;
+		}
+	}
+	sort(values.begin(), values.end());
+	ListNode* new_list = new ListNode(values[0]);
+	ListNode* prev = nullptr;
+	for (auto i = 1; i < values.size(); ++i) {
+		ListNode* temp = new ListNode(values[i]);
+		if (new_list->next == nullptr) {
+			new_list->next = temp;
+			prev = temp;
+		}
+		else {
+			prev->next = temp;
+			prev = temp;
+		}
+	}
+	return new_list;
+	/* multiset<int>values;
+	ListNode *curr = NULL;
+	for (auto list : A) {
+		curr = list;
+		while (curr != NULL) {
+			values.insert(curr->val);
+			curr = curr->next;
+		}
+	}
+	if (!values.empty()) {
+		ListNode *merge_list = NULL;
+		ListNode *temp = NULL;
+		curr = NULL;
+		for (auto it = values.begin(); it != values.end(); ++it) {
+			temp = new ListNode(*it);
+			if (merge_list == NULL) {
+				merge_list = temp;
+				merge_list->next = NULL;
+			}
+			else if (merge_list->next == NULL) {
+				curr = temp;
+				merge_list->next = curr;
+			}
+			else {
+				curr->next = temp;
+				curr = temp;
+			}
+		}
+		return merge_list;
+	}
+	return NULL;*/
+}
+void mergeKSortedListsDriver() {
+	//list one
+	ListNode* list_one = new ListNode(1);
+	ListNode* three = new ListNode(3);
+	ListNode* five = new ListNode(5);
+	ListNode* seven = new ListNode(7);
+	list_one->next = three;
+	three->next = five;
+	five->next = seven;
+	printLinkedList(list_one);
+	//list two
+	ListNode* list_two = new ListNode(2);
+	ListNode* four = new ListNode(4);
+	ListNode* six = new ListNode(6);
+	ListNode* eight = new ListNode(8);
+	list_two->next = four;
+	four->next = six;
+	six->next = eight;
+	printLinkedList(list_two);
+	//list three
+	ListNode* list_three = new ListNode(0);
+	ListNode* nine = new ListNode(9);
+	ListNode* ten = new ListNode(10);
+	ListNode* eleven = new ListNode(11);
+	list_three->next = nine;
+	nine->next = ten;
+	ten->next = eleven;
+	printLinkedList(list_three);
+	//merge sorted lits
+	//vector<ListNode*>lists{ list_one,list_two,list_three };
+	ListNode* head = new ListNode(1);
+	ListNode* next = new ListNode(6);
+	head->next = next;
+	vector<ListNode*>lists{ head,nullptr,nullptr };
+	ListNode* sorted_list = mergeKSortedLists(lists);
+	printLinkedList(sorted_list);
+}
+class LeastRecentlyUsed {
+private:
+	size_t capacity;
+	size_t count;
+	unordered_map<int, int>map;
+	unordered_map<int, int>freq;
+	int findLeastUsedKey() {
+		int min_val = INT_MAX;
+		int key = 0;
+		for (auto it = freq.begin(); it != freq.end(); ++it) {
+			cout << it->first << " " << it->second << "\n";
+			if (it->second < min_val) {
+				min_val = it->second;
+				key = it->first;
+			}
+		}
+		return key;
+	}
+	void decreaseAll(int key) {
+		for (auto it = freq.begin(); it != freq.end(); ++it) {
+			if (it->first != key)
+				--freq[it->first];
+		}
+	}
+public:
+	LeastRecentlyUsed(size_t capacity) :capacity(capacity),count(0) {}
+	void set(int key, int val) {
+		if(count >= capacity) {
+			//remove LRU
+			int lru_key = findLeastUsedKey();
+			cout << "erasing=" << lru_key << "\n";
+			map.erase(lru_key);
+			freq.erase(lru_key);
+			--count;
+		}
+		map[key] = val;
+		++freq[key];
+		++count;
+		//decreaseAll(key);
+	}
+	int get(int key) {
+		if (map.find(key) == map.end())
+			return -1;
+		++freq[key];
+		decreaseAll(key);
+		return map[key];
+	}
+};
+void LeastRecentlyUsedDriver() {
+	LeastRecentlyUsed LRU(2);
+	LRU.set(1, 10);
+	LRU.set(5, 12);
+	cout << LRU.get(5) << "\n";
+	cout << LRU.get(1) << "\n";
+	cout << LRU.get(10) << "=-1\n";
+	LRU.set(6, 14);
+	cout << LRU.get(5) << "\n";
+}
+
 
 int main(int argc, char** argv) {
 	
@@ -1751,7 +2087,14 @@ int main(int argc, char** argv) {
 	//generateParenthesisDriver();
 	//twoSumDriver();
 	//findSubstringDriver();
-	lengthOfLongestSubstringDriver();
+	//lengthOfLongestSubstringDriver();
+
+	//solveSudokuDriver();
+	//maxPointsDriver();
+	//findAnagramsDriver();
+	//minWindowDriver();
+	//mergeKSortedListsDriver();
+	//LeastRecentlyUsedDriver();
 
 	return 0;
 }
