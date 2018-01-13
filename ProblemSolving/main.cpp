@@ -4,6 +4,8 @@
 #include <string>
 #include <stack>
 #include <deque>
+#include <unordered_map>
+#include <unordered_set>
 
 using namespace std;
 
@@ -1319,6 +1321,385 @@ void minStackDriver() {
 	cout << "getMin=" << ms.getMin() << "\n";
 
 }
+ListNode* reverseLinkedListRecursiveHelper(ListNode* curr, ListNode* prev) {
+	if (curr == nullptr)
+		return prev;
+	ListNode* next = curr->next;
+	curr->next = prev;
+	prev = curr;
+	curr = next;
+	return reverseLinkedListRecursiveHelper(curr, prev);
+}
+ListNode* reverseLinkedListRecursive(ListNode* head) {
+	if (head == nullptr || head->next == nullptr)
+		return head;
+	return reverseLinkedListRecursiveHelper(head,nullptr);
+}
+void reverseLinkedListRecursiveDriver() {
+	ListNode* head = new ListNode(1);
+	ListNode* two = new ListNode(2);
+	ListNode* three = new ListNode(3);
+	ListNode* four = new ListNode(4);
+	ListNode* five = new ListNode(5);
+
+	head->next = two;
+	two->next = three;
+	three->next = four;
+	four->next = five;
+	printLinkedList(head);
+
+	head = reverseLinkedListRecursive(head);
+	printLinkedList(head);
+}
+void combinationsHelper(int n, int k, int curr, vector<int>& result, vector<vector<int>>& all_results) {
+	if (k==0) {
+		all_results.push_back(result);
+		return;
+	}
+	if (curr == n) {
+		return;
+	}
+	
+	for (int i = curr; i < n; ++i) {
+		//choose
+		result.push_back(i + 1);
+		//explore
+		combinationsHelper(n, k-1, i+1, result, all_results);
+		//unchoose
+		result.pop_back();
+	}
+	
+}
+vector<vector<int>> combinations(int n, int k) {
+	//n=4 -> 1-4; k= digits
+	vector<vector<int>>all_results;
+	vector<int>result;	
+	combinationsHelper(n, k, 0, result, all_results);
+	
+	return all_results;
+}
+void combinationsDriver() {
+	print2DVector(combinations(4, 2));
+}
+//void combinationSumHelper(vector<int> &nums, int target_sum, int curr_sum,int curr, vector<int> &result,vector<vector<int>>&all_results) {
+//	if (curr_sum == target_sum) {
+//		all_results.push_back(result);
+//		return;
+//	}
+//	if (curr_sum > target_sum)
+//		return;
+//	for (auto i = curr; i < nums.size(); ++i) {
+//		//choose
+//		result.push_back(nums[i]);
+//		//explore
+//		combinationSumHelper(nums, target_sum, curr_sum + nums[i],curr+i, result, all_results);
+//		//unchoose
+//		result.pop_back();
+//	}
+//}
+void combinationSumHelper(vector<int> &nums, int target_sum, int curr, vector<int> &result, vector<vector<int>>&all_results) {
+	if (target_sum == 0) {
+		all_results.push_back(result);
+		return;
+	}
+	if (target_sum < 0 || curr == nums.size())
+		return;
+	
+	result.push_back(nums[curr]);	
+	combinationSumHelper(nums, target_sum - nums[curr], curr, result, all_results);	
+	result.pop_back();
+	combinationSumHelper(nums, target_sum, curr+1, result, all_results);
+}
+vector<vector<int>> combinationSum(vector<int> &A, int B) {
+	vector<vector<int>>all_results;
+	vector<int>result;
+	vector<int>temp;
+	sort(A.begin(), A.end());
+	temp.push_back(A[0]);
+	for (int i = 1; i<A.size(); ++i) {
+		if (A[i] != temp[temp.size() - 1])
+			temp.push_back(A[i]);
+	}
+	combinationSumHelper(temp, B, 0,result, all_results);
+	return all_results;
+}
+void combinationSumDriver() {
+	vector<int>nums{ 8, 10, 6, 11, 1, 16, 8 };
+	int target_sum = 28;
+	print2DVector(combinationSum(nums, target_sum));
+}
+void allPermutationsHelper(vector<int> &nums, vector<vector<int>>& all_results,int curr) {
+	if (curr == nums.size()-1) {
+		all_results.push_back(nums);
+		return;
+	}
+	else {
+		for (auto i = curr; i < nums.size(); ++i) {
+			//choose
+			swap(nums[curr], nums[i]);
+			//explore
+			allPermutationsHelper(nums, all_results, curr+1);
+			//unchoose
+			swap(nums[curr], nums[i]);
+		}
+	}
+	
+}
+vector<vector<int>> allPermutations(vector<int> &A) {
+	vector<vector<int>>all_results;
+	allPermutationsHelper(A, all_results,0);
+	return all_results;
+}
+void allPermutationsDriver() {
+	vector<int>nums{ 1,2,3 };
+	print2DVector(allPermutations(nums));
+}
+bool isSafe(vector<vector<string>>&board,int row, int col) {
+	/*************Important things to remember************/
+	//1. function gets called from column 0 to column -1, which
+	//saves us from checking the current column (vertical check)
+	//2. we are placing queens from left to right, top to bottom
+	//for that reason we only need to check:
+	//left, left-upper diagonal and left-lower diagonal
+	int i = 0, j = 0;
+	//check row (horizontal): placing queens from left to right so
+	//there's no point checking past the passed in column since
+	//we haven't placed anything yet past that point
+	for (i = 0; i < col; ++i) {
+		if (board[row][i] == "Q")
+			return false;
+	}
+	//check upper left diagonal
+	for (i = row, j = col; i >= 0 && j >= 0; --i, --j) {
+		if (board[i][j] == "Q")
+			return false;
+	}
+	//check lower left diagonal
+	for (i = row, j = col; i < board.size() && j >= 0; ++i, --j) {
+		if (board[i][j] == "Q")
+			return false;
+	}
+	return true;
+}
+void solveNQueensHelper(int total_queens,int col, vector<vector<string>>&board, vector<string>& config, vector<vector<string>>&solutions) {
+	if (col >= total_queens) {
+		//all queens placed
+		solutions.push_back(config);
+		return;
+	}
+	else {
+		for (auto row = 0; row < total_queens; ++row) {
+			if (isSafe(board,row, col)) {
+				//choose
+				board[row][col] = "Q";
+				config[row][col] = 'Q';
+				//explore
+				solveNQueensHelper(total_queens, col + 1, board, config,solutions);
+				//unchoose
+				board[row][col] = ".";
+				config[row][col] = '.';
+			}
+		}
+	}
+}
+vector<vector<string>> solveNQueens(int A) {
+	vector<vector<string>>solutions;
+	//there's no possible solutions
+	if (A == 2 || A == 3)
+		return solutions;
+	//if board size is 1 we can place one queen
+	if (A == 1)
+		return { {"Q"} };
+	vector<vector<string>>board(A,vector<string>(A,"."));
+	vector<string>config(A,"....");
+	solveNQueensHelper(A, 0, board, config, solutions);
+	return solutions;
+}
+void solveNQueensDriver() {
+	print2DVector(solveNQueens(4));
+}
+bool isPalindrome(const string& s, int start, int end) {
+	while (start < end) {
+		if (s[start] != s[end])
+			return false;
+		++start;
+		--end;
+	}
+	return true;
+}
+void palindromePartitioningHelper(string s, int start,int end,vector<string>palindrome,vector<vector<string>>& all_palindromes) {
+	if (start >= end) {
+		all_palindromes.push_back(palindrome);
+		return;
+	}
+	else {
+		for (auto i = start; i < end; ++i) {
+			if (isPalindrome(s, start, i)) {
+				//choose
+				palindrome.push_back(s.substr(start, i - start + 1));
+				//explore
+				palindromePartitioningHelper(s, i + 1, end, palindrome, all_palindromes);
+				//unchoose
+				palindrome.pop_back();
+			}
+		}
+	}
+}
+vector<vector<string>> palindromePartitioning(string& A) {
+	vector<vector<string>>all_palindromes;
+	vector<string>palindrome;
+	palindromePartitioningHelper(A, 0, A.size(), palindrome, all_palindromes);
+	return all_palindromes;
+}
+void palindromePartitioningDriver() {
+	string s{ "aab" };
+	print2DVector(palindromePartitioning(s));
+}
+void generateParenthesisHelper(int n,int pos, int open, int close,string& parens, vector<string>&all_parens) {
+	if (close == n) {
+		all_parens.push_back(parens);
+		return;
+	}
+	else {
+		if (open > close) {
+			parens[pos] = ')';
+			generateParenthesisHelper(n, pos + 1, open, close + 1,parens,all_parens);
+		}
+		if (open < n) {
+			parens[pos] = '(';
+			generateParenthesisHelper(n, pos + 1, open + 1, close, parens, all_parens);
+		}
+	}
+}
+vector<string> generateParenthesis(int A) {
+	vector<string>all_parens;
+	string parens(A * 2,' ');
+	generateParenthesisHelper(A, 0, 0, 0, parens, all_parens);
+	sort(all_parens.begin(), all_parens.end());
+	return all_parens;
+}
+void generateParenthesisDriver() {
+	print1DVector(generateParenthesis(3));
+}
+vector<int> twoSum(vector<int>& nums, int target_sum) {
+	vector<int>result;
+	unordered_map<int, int>table;
+
+	for (auto i = 0; i < nums.size(); ++i) {
+		if (table.find(target_sum - nums[i]) != table.end()) {
+			result.push_back(table[target_sum - nums[i]]);
+			result.push_back(i + 1);
+			return result;
+		}
+		if (table.find(nums[i]) == table.end())
+			table[nums[i]] = i + 1;
+	}
+	return result;
+}
+void twoSumDriver() {
+	vector<int>nums{ 2, 7, 11, 15 };
+	int target_sum = 9;
+	print1DVector(twoSum(nums, target_sum));
+}
+vector<int> findSubstring(string A, const vector<string> &B) {
+	vector<int>result;
+	int wsize = B[0].size();
+	int lsize = B.size();
+
+	if (A.size() == 0 || B.size() == 0)
+		return result;
+
+	unordered_map<string, int> myMap;
+
+	for (int i = 0; i < B.size(); i++) {
+		if (myMap.find(B[i]) != myMap.end())
+			myMap[B[i]]++;
+		else
+			myMap[B[i]] = 1;
+	}
+
+	int i = 0;
+
+	while ((i + wsize*lsize - 1) < A.size()) {
+		unordered_map<string, int> tempMap;
+		int j = 0;
+		while (j < A.size()) {
+			string temp = A.substr(i + j*wsize, wsize);
+			if (myMap.find(temp) == myMap.end()) {
+				break;
+			}
+			else {
+				if (tempMap.find(temp) == tempMap.end()) {
+					tempMap[temp] = 1;
+				}
+				else {
+					tempMap[temp]++;
+				}
+				if (tempMap[temp] > myMap[temp]) {
+					break;
+				}
+				j++;
+			}
+			if (j == lsize) {
+				result.push_back(i);
+			}
+		}
+		i++;
+	}
+	return result;
+
+}
+void findSubstringDriver() {
+
+}
+vector<vector<int>> anagrams(const vector<string> &A) {
+
+	for (auto i = 0; i < A.size(); ++i) {
+
+		for (auto j = 0; j < A[i].size(); ++j) {
+
+		}
+	}
+	return { {} };
+}
+int lengthOfLongestSubstring(string A) {
+	unordered_set<char>s;
+	int max_len = 0;
+	for (auto c : A) {
+		if (s.find(c) != s.end()) {
+			max_len = max(max_len, int(s.size()));
+			s.clear();
+		}
+		else {
+			s.insert(c);
+		}
+	}
+	return max_len;
+	/*unordered_map<char,int>hash;
+	int curr_len = 0;
+	int max_len = 1;
+	int i = 0;
+
+	while(i < A.size()) {
+		if (hash.find(A[i]) == hash.end()) {
+			hash[A[i]] = i;
+			++curr_len;
+			++i;
+		}
+		else {
+			i = hash[A[i]] + 1;
+			hash.clear();
+			max_len = max(max_len, curr_len);
+			curr_len = 0;
+		}
+		
+	}
+	return max(max_len,curr_len);*/
+}
+void lengthOfLongestSubstringDriver() {
+	string s{ "bbbbb" };
+	cout << "lengthOfLongestSubstring=" << lengthOfLongestSubstring(s) << "\n";
+}
 
 int main(int argc, char** argv) {
 	
@@ -1360,7 +1741,17 @@ int main(int argc, char** argv) {
 	//validParenthesisDriver();
 	//redundantParensDriver();
 	//slidingMaximumDriver();
-	minStackDriver();
+	//minStackDriver();
+	//reverseLinkedListRecursiveDriver();
+	//combinationsDriver();
+	//combinationSumDriver();
+	//allPermutationsDriver();
+	//solveNQueensDriver();
+	//palindromePartitioningDriver();
+	//generateParenthesisDriver();
+	//twoSumDriver();
+	//findSubstringDriver();
+	lengthOfLongestSubstringDriver();
 
 	return 0;
 }
