@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <string>
 #include <stack>
+#include <queue>
 #include <deque>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -2035,7 +2037,450 @@ void LeastRecentlyUsedDriver() {
 	LRU.set(6, 14);
 	cout << LRU.get(5) << "\n";
 }
+vector<int> distinctNumbers(vector<int> &A, int B) {
+	//geeks for geeks efficient solution with explantion
+	vector<int>result;
+	map<int, int>map;
+	int count = 0;
+	//first window
+	for (auto i = 0; i < B; ++i) {
+		if (map[A[i]] == 0)
+			++count;
+		++map[A[i]];
+	}
+	result.push_back(count);
+	//remaining array
+	for (auto i = B; i < A.size(); ++i) {
+		if (map[A[i - B]] == 1)
+			--count;
+		map[A[i - B]] = map[A[i - B]] - 1;
 
+		if (map[A[i]] == 0)
+			++count;
+		map[A[i]] = map[A[i]] + 1;
+
+		result.push_back(count);
+	}
+	return result;
+	/*vector<int>result;
+	unordered_set<int>set;
+	for (auto i = 0; i < A.size()-B+1; ++i) {
+		for (auto j = i; j < B+i; ++j) {
+			set.insert(A[j]);
+		}
+		result.push_back(set.size());
+		set.clear();
+	}
+	return result;*/
+}
+void distinctNumbersDriver() {
+	vector<int>nums{ 1, 2, 1, 3, 4, 3 };
+	int k = 3;
+	print1DVector(distinctNumbers(nums, k));
+}
+struct TreeNode {
+	int val;
+	TreeNode *left;
+	TreeNode *right;
+	TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+};
+int isValidBSTHelper(TreeNode* curr) {
+	if (curr == NULL)
+		return 1;
+	if (curr->left == NULL && curr->right == NULL)
+		return 1;
+	if (curr->left == NULL || curr->right == NULL)
+		return 0;
+	return curr->val > curr->left->val &&
+		curr->val < curr->right->val &&
+		isValidBSTHelper(curr->left) &&
+		isValidBSTHelper(curr->right);
+}
+/*int checkValid(TreeNode* root, int min, int max){
+    if(root == NULL){
+        return 1;
+    }
+    else if((root->val < max) && 
+        (root->val > min) && 
+        (checkValid(root->left, min, root->val)) &&
+        (checkValid(root->right, root->val, max))){
+        return 1;        
+    }
+    return 0;
+}
+int Solution::isValidBST(TreeNode* A) {
+return checkValid(A, INT_MIN, INT_MAX);
+}
+*/
+int isValidBST(TreeNode* A) {
+	return  isValidBSTHelper(A);
+}
+void isValidBSTDriver() {
+	TreeNode* root1 = new TreeNode(1);
+	TreeNode* two = new TreeNode(2);
+	TreeNode* three = new TreeNode(3);
+	root1->left = two;
+	root1->right = three;
+	cout << "root1=" << isValidBST(root1) << "\n";
+	TreeNode* root2 = new TreeNode(2);
+	TreeNode* left = new TreeNode(1);
+	TreeNode* right = new TreeNode(3);
+	root2->left = left;
+	root2->right = right;
+	cout << "root2=" << isValidBST(root2) << "\n";
+	
+}
+void inOrderRecursive(TreeNode* root) {
+	if (root == NULL)
+		return;
+	inOrderRecursive(root->left);
+	cout << root->val << ",";
+	inOrderRecursive(root->right);
+}
+vector<int> inorderIterative(TreeNode* A) {
+	vector<int>inorder;
+	stack<TreeNode*>s;
+	TreeNode* curr = A;
+
+	while (true) {
+		if (curr != NULL) {
+			s.push(curr);
+			curr = curr->left;
+		}
+		else {
+			if (!s.empty()) {
+				curr = s.top(); s.pop();
+				inorder.push_back(curr->val);
+				curr = curr->right;
+			}
+			else {
+				break;
+			}
+
+		}
+	}
+	return inorder;
+}
+void inOrderDriver() {
+	TreeNode* root1 = new TreeNode(1);
+	TreeNode* two = new TreeNode(2);
+	TreeNode* three = new TreeNode(3);
+	root1->right = two;
+	two->left = three;
+	inOrderRecursive(root1);
+	cout << "\n";
+	print1DVector(inorderIterative(root1));
+
+}
+vector<int> preorderIterative(TreeNode* A) {
+	if (A == NULL)
+		return {};
+	vector<int>preorder;
+	stack<TreeNode*>s;
+	TreeNode* curr = NULL;
+
+	s.push(A);
+	while (!s.empty()) {
+		//1. push curr
+		preorder.push_back(s.top()->val);
+		curr = s.top(); s.pop();
+		//2.push right first because left needs to come out first
+		if (curr->right != NULL)
+			s.push(curr->right);
+		//3.push left last so we can pop before right
+		if (curr->left != NULL)
+			s.push(curr->left);
+	}
+	return preorder;
+}
+void preOrderDriver() {
+	TreeNode* root1 = new TreeNode(1);
+	TreeNode* two = new TreeNode(2);
+	TreeNode* three = new TreeNode(3);
+	root1->right = two;
+	two->left = three;
+	print1DVector(preorderIterative(root1));
+}
+vector<int> postorderIterative(TreeNode* A) {
+	if (A == NULL)
+		return {};
+	vector<int>postorder;
+	stack<TreeNode*>s1;
+	stack<TreeNode*>s2;
+	TreeNode* curr = NULL;
+	
+	s1.push(A);
+
+	while (!s1.empty()) {
+		//1.parent node goes first, because is the last one to come out
+		curr = s1.top(); s1.pop();
+		s2.push(curr);
+		//in reverse order, left has to come after right to be first
+		if (curr->left != NULL)
+			s1.push(curr->left);
+		//right will become top in stack and second in reverse order to
+		//be popped off after parent
+		if (curr->right != NULL)
+			s1.push(curr->right);
+	}
+	while (!s2.empty()) {
+		postorder.push_back(s2.top()->val); s2.pop();
+	}
+	return postorder;
+}
+void postOrderDriver() {
+	TreeNode* root1 = new TreeNode(1);
+	TreeNode* two = new TreeNode(2);
+	TreeNode* three = new TreeNode(3);
+	root1->right = two;
+	two->left = three;
+	print1DVector(postorderIterative(root1));
+}
+struct TreeLinkNode {
+	int val;
+	TreeLinkNode *left, *right, *next;
+	TreeLinkNode(int x) : val(x), left(NULL), right(NULL), next(NULL) {}
+};
+void nextRightPointers(TreeLinkNode* A) {
+	if (A == NULL)
+		return;
+	TreeLinkNode* prev = NULL;
+	TreeLinkNode* curr = NULL;
+	queue<TreeLinkNode*>q;
+	queue<int>level;
+	q.push(A);
+	level.push(0);
+
+	int curr_level = 0;
+	int prev_level = 0;
+
+	while (!q.empty()) {
+		curr_level = level.front();
+		curr = q.front();
+		//transitioning to next level, so if the last element (prev)
+		//on the prev element is not null, it means is the element
+		//all the way to the right and it needs to point to NULL
+		if (curr_level != prev_level) {
+			if (prev != NULL)
+				prev->next = NULL;
+		}
+		//otherwise, prev(node on the left) needs to point to curr
+		//(which is the node to its right)  if not null of course
+		else {
+			if (prev != NULL)
+				prev->next = curr;
+		}
+		//push nodes from next level
+		if (curr->left != NULL) {
+			q.push(curr->left);
+			level.push(curr_level + 1);
+		}
+		if (curr->right != NULL) {
+			q.push(curr->right);
+			level.push(curr_level + 1);
+		}
+		//move to next level
+		prev_level = curr_level;
+		prev = curr;
+		q.pop();
+		level.pop();
+	}
+	//take care of last element if any
+	if (prev != NULL)
+		prev->next = NULL;
+}
+void nextRightPointersDriver() {
+	TreeLinkNode* root = new TreeLinkNode(1);
+	TreeLinkNode* two = new TreeLinkNode(2);
+	TreeLinkNode* three = new TreeLinkNode(3);
+	TreeLinkNode* four = new TreeLinkNode(4);
+	TreeLinkNode* five = new TreeLinkNode(5);
+	TreeLinkNode* six = new TreeLinkNode(6);
+	TreeLinkNode* seven = new TreeLinkNode(7);
+
+	root->left = two;
+	root->right = three;
+	two->left = four;
+	two->right = five;
+	three->left = six;
+	three->right = seven;
+
+	nextRightPointers(root);
+	if(five->next == NULL)
+		cout << "root->next->NULL\n";
+	else
+		cout << "root->next->" << five->next->val << "\n";
+}
+int hasPathSumHelper(TreeNode* curr, int sum) {
+	if (curr == NULL)
+		return 0;
+	if (curr->left == NULL && curr->right == NULL) {
+		//another way to think about it is, if I were to subtract the curr node's value
+		//from sum and the result is zero, then we found a path or like the approach below
+		//if the sum, that we've been subtracting values from, equals to the current node's
+		//value it means we found a path
+		if (sum == curr->val)
+			return 1;
+	}
+	return hasPathSumHelper(curr->left, sum - curr->val) || hasPathSumHelper(curr->right, sum - curr->val);
+}
+int hasPathSum(TreeNode* A, int B) {
+	return hasPathSumHelper(A, B);
+}
+void hasPathSumDriver() {
+	TreeNode* root = new TreeNode(5);
+	TreeNode* four = new TreeNode(4);
+	TreeNode* eight = new TreeNode(8);
+	TreeNode* eleven = new TreeNode(11);
+	TreeNode* thirteen = new TreeNode(13);
+	TreeNode* four_again = new TreeNode(4);
+	TreeNode* seven = new TreeNode(7);
+	TreeNode* two = new TreeNode(2);
+	TreeNode* one = new TreeNode(1);
+
+	root->left = four;
+	root->right = eight;
+	four->left = eleven;
+	eleven->left = seven;
+	eleven->right = two;
+	eight->left = thirteen;
+	eight->right = four_again;
+	four_again->right = one;
+
+	cout << "hasPathSum=" << hasPathSum(root, 22) << "\n";
+}
+int maxDepthOfBST(TreeNode* root) {
+	if (root == NULL)
+		return 0;
+	return 1 + max(maxDepthOfBST(root->left), maxDepthOfBST(root->right));
+}
+void maxDepthOfBSTDriver() {
+	TreeNode* root = new TreeNode(5);
+	TreeNode* four = new TreeNode(4);
+	TreeNode* eight = new TreeNode(8);
+	TreeNode* eleven = new TreeNode(11);
+	TreeNode* thirteen = new TreeNode(13);
+	TreeNode* four_again = new TreeNode(4);
+	TreeNode* seven = new TreeNode(7);
+	TreeNode* two = new TreeNode(2);
+	TreeNode* one = new TreeNode(1);
+
+	root->left = four;
+	root->right = eight;
+	four->left = eleven;
+	eleven->left = seven;
+	eleven->right = two;
+	eight->left = thirteen;
+	eight->right = four_again;
+	four_again->right = one;
+
+	cout << "maxDepthOfBST=" << maxDepthOfBST(root) << "\n";
+}
+int isBalancedBST(TreeNode* root) {
+	if (root == NULL)
+		return 1;
+	int left = maxDepthOfBST(root->left);
+	int right = maxDepthOfBST(root->right);
+	return abs(left - right) <= 1 &&
+		isBalancedBST(root->left) &&
+		isBalancedBST(root->right);
+}
+void isBalancedBSTDriver() {
+
+}
+int identicalThrees(TreeNode* t1, TreeNode* t2) {
+	if (t1 == NULL && t2 == NULL)
+		return 1;
+	if (t1 == NULL || t2 == NULL)
+		return 0;
+	int left = identicalThrees(t1->left, t2->left);
+	int right = identicalThrees(t1->right, t2->right);
+	return (t1->val == t2->val) && left && right;
+}
+void identicalThreesDriver() {
+	TreeNode* t1 = new TreeNode(1);
+	TreeNode* t1_two = new TreeNode(2);
+	TreeNode* t1_three = new TreeNode(3);
+	t1->left = t1_two;
+	t1->right = t1_three;
+
+	TreeNode* t2 = new TreeNode(1);
+	TreeNode* t2_two = new TreeNode(3);
+	TreeNode* t2_three = new TreeNode(2);
+	t2->left = t2_two;
+	t2->right = t2_three;
+
+	cout << "identicalThrees=" << identicalThrees(t1, t2) << '\n';
+}
+int isSymmetricHelper(TreeNode* t1 ,TreeNode* t2) {
+	if (t1 == NULL && t2 == NULL)
+		return 1;
+	return (t1 != NULL && t2 != NULL) &&
+				 (t1->val == t2->val) &&
+		isSymmetricHelper(t1->left, t2->right) &&
+		isSymmetricHelper(t1->right, t2->left);
+}
+int isSymmetric(TreeNode* A) {
+	return isSymmetricHelper(A, A);
+}
+void isSymmetricDriver() {
+
+}
+bool findTreeNode(TreeNode* curr,int val) {
+	if (curr == NULL)
+		return false;
+	if (curr->val == val)
+		return true;
+	return findTreeNode(curr->left, val) || findTreeNode(curr->right, val);
+}
+TreeNode* leastCommonAncestorHelper(TreeNode* curr, int val1, int val2) {
+	if (curr == NULL)
+		return NULL;
+	if (curr->val == val1 || curr->val == val2)
+		return curr;
+	TreeNode* left = leastCommonAncestorHelper(curr->left, val1, val2);
+	TreeNode* right = leastCommonAncestorHelper(curr->right, val1, val2);
+	//found ancestor
+	if (left != NULL && right != NULL)
+		return curr;
+	//did not find on left, but both values might be on
+	//right subtree or vicesversa
+	if (left == NULL)
+		return right;
+	else
+		return left;
+}
+int leastCommonAncestor(TreeNode* root, int val1, int val2) {
+	bool n1 = findTreeNode(root, val1);
+	bool n2 = findTreeNode(root, val2);
+
+	if (n1 == false || n2 == false)
+		return -1;
+	TreeNode* ancestor = leastCommonAncestorHelper(root, val1, val2);
+	return ancestor == NULL ? -1 : ancestor->val;
+}
+void leastCommonAncestorDriver() {
+	TreeNode* root = new TreeNode(3);
+	TreeNode* five = new TreeNode(5);
+	TreeNode* one = new TreeNode(1);
+	TreeNode* six = new TreeNode(6);
+	TreeNode* two = new TreeNode(2);
+	TreeNode* seven = new TreeNode(7);
+	TreeNode* four = new TreeNode(4);
+	TreeNode* zero = new TreeNode(0);
+	TreeNode* eight = new TreeNode(8);
+
+	root->left = five;
+	root->right = one;
+	five->left = six;
+	five->right = two;
+	two->left = seven;
+	two->right = four;
+	one->left = zero;
+	one->right = eight;
+
+	cout << "leastCommonAncestor=" << leastCommonAncestor(root, 5, 4) << '\n';
+}
 
 int main(int argc, char** argv) {
 	
@@ -2088,13 +2533,25 @@ int main(int argc, char** argv) {
 	//twoSumDriver();
 	//findSubstringDriver();
 	//lengthOfLongestSubstringDriver();
-
 	//solveSudokuDriver();
 	//maxPointsDriver();
 	//findAnagramsDriver();
 	//minWindowDriver();
 	//mergeKSortedListsDriver();
 	//LeastRecentlyUsedDriver();
+
+	//distinctNumbersDriver();
+	//isValidBSTDriver();
+	//inOrderDriver();
+	//preOrderDriver();
+	//postOrderDriver();
+	//nextRightPointersDriver();
+	//hasPathSumDriver();
+	//maxDepthOfBSTDriver();
+	//isBalancedBSTDriver();
+	//identicalThreesDriver();
+	//isSymmetricDriver();
+	//leastCommonAncestorDriver();
 
 	return 0;
 }
