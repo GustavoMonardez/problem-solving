@@ -2481,6 +2481,576 @@ void leastCommonAncestorDriver() {
 
 	cout << "leastCommonAncestor=" << leastCommonAncestor(root, 5, 4) << '\n';
 }
+struct Trie {
+	Trie* edges[26];
+	int words;
+	Trie() {
+		for (int i = 0; i<26; i++)
+			edges[i] = 0;
+		words = 0;
+	}
+};
+void addToTrie(Trie *head, string s) {
+	int n = s.length();
+	Trie *current = head;
+	int i;
+	for (i = 0; i<n; i++) {
+		current->words += 1;
+		if (!current->edges[s[i] - 'a'])
+			current->edges[s[i] - 'a'] = new Trie();
+		current = current->edges[s[i] - 'a'];
+	}
+}
+string findPrefix(string s, Trie *head) {
+	string pfx = "";
+	Trie *current = head;
+	int i = 0, n = s.length();
+	current = current->edges[s[i] - 'a'];
+	pfx += s[i];
+	for (i = 1; i<n; i++) {
+		if (current->words == 1)
+			return pfx;
+		current = current->edges[s[i] - 'a'];
+		pfx += s[i];
+	}
+	return pfx;
+
+}
+vector<string> shortestUniquePrefix(vector<string> &A) {
+	vector<string>prefixes;
+	Trie* head = new Trie();
+	for (auto i = 0; i < A.size(); ++i)
+		addToTrie(head, A[i]);
+	for (auto i = 0; i < A.size(); ++i)
+		prefixes.push_back(findPrefix(A[i],head));
+	return prefixes;
+}
+void shortestUniquePrefixDriver() {
+	vector<string>words{ {"zebra"},{"dog"},{"duck"},{"dove"} };
+	print1DVector(words);
+	print1DVector(shortestUniquePrefix(words));
+}
+TreeNode* flattenBinaryTreeToList(TreeNode* A) {
+	/*if (curr == NULL)
+		return;
+	if (curr->left != NULL && curr->right == NULL)
+		swap(curr->left, curr->right);
+	else if (curr->left != NULL && curr->right != NULL) {
+		swap(curr->left, curr->right);
+		TreeNode *temp = curr->right;
+		while (temp->right != NULL)
+			temp = temp->right;
+		temp->right = curr->left;
+		curr->left = NULL;
+	}
+	flattenHelper(curr->right);*/
+	if (A == NULL)
+		return NULL;
+
+	TreeNode*curr = A;
+	while (curr != NULL) {
+		//attach the right subtree to the right most leaf on the left subtree
+		if (curr->left != NULL) {
+			TreeNode* right_most = curr->left;
+			while (right_most->right != NULL) {
+				right_most = right_most->right;
+			}
+			//attaching
+			right_most->right = curr->right;
+
+			curr->right = curr->left;
+			curr->left = NULL;
+		}
+		//flatten the rest of the tree
+		curr = curr->right;
+	}
+}
+void flattenBinaryTreeToListDriver() {
+
+}
+void printBinaryTree(TreeNode* curr) {
+	if (curr == NULL)
+		return;
+	queue<TreeNode*>q;
+	q.push(curr);
+
+	while (!q.empty()) {
+		curr = q.front(); q.pop();
+		cout << curr->val << ",";
+		if (curr->left != NULL)
+			q.push(curr->left);
+		if (curr->right != NULL)
+			q.push(curr->right);
+	}
+	cout << "\n";
+}
+int findInOrderIndex(vector<int>& nums, int start, int end, int val) {
+	for (auto i = start; i <= end; ++i) {
+		if (nums[i] == val)
+			return i;
+	}
+	return -1;
+}
+TreeNode* buildTreePreorderInorderHelper(vector<int> &preorder, vector<int> &inorder,int start, int end) {
+	static int preorder_index = 0;
+	if (start > end)
+		return NULL;
+	TreeNode* node = new TreeNode(preorder[preorder_index]);
+	++preorder_index;
+	//if no children
+	if (start == end)
+		return node;
+	//else find node in inorder
+	int inorder_index = findInOrderIndex(preorder, start, end, node->val);
+	//construct tree
+	node->left = buildTreePreorderInorderHelper(preorder, inorder, start, inorder_index - 1);
+	node->right = buildTreePreorderInorderHelper(preorder, inorder, inorder_index+1, end);
+	return node;
+}
+TreeNode* buildTreePreorderInorder(vector<int> &preorder, vector<int> &inorder) {
+	return buildTreePreorderInorderHelper(preorder, inorder, 0, inorder.size() - 1);
+}
+void buildTreePreorderInorderDriver() {
+	vector<int>preorder{ 1,2,3 };
+	vector<int>inorder{ 2,1,3 };
+	//buildTreePreorderInorder(preorder, inorder);
+	printBinaryTree(buildTreePreorderInorder(preorder, inorder));
+}
+int sizeTree(TreeNode *root) {
+	if (root == NULL)
+		return 0;
+
+	return 1 + sizeTree(root->left) + sizeTree(root->right);
+}
+int kthsmallest(TreeNode* root, int k) {
+	int leftSize = sizeTree(root->left);
+
+	if (leftSize == k - 1)
+		return root->val;
+
+	if (leftSize > k - 1)
+		return kthsmallest(root->left, k);
+
+	return kthsmallest(root->right, k - leftSize - 1);
+}
+void kthsmallestDriver() {
+	TreeNode* root = new TreeNode(2);
+	TreeNode* one = new TreeNode(1);
+	TreeNode* three = new TreeNode(3);
+	root->left = one;
+	root->right = three;
+	//printBinaryTree(root);
+	cout << "kthsmallest=" << kthsmallest(root, 2) << "\n";
+}
+class BSTIterator {
+private:
+	TreeNode* root;
+	deque<int>inorder_values;
+	void inorder(TreeNode* curr) {
+		if (curr == NULL)
+			return;
+		inorder(curr->left);
+		inorder_values.push_back(curr->val);
+		inorder(curr->right);
+	}
+public:
+	BSTIterator(TreeNode* root) :root(root) {
+		inorder(root);
+	}
+	int next() {
+		int next_val = inorder_values.front(); inorder_values.pop_front();
+		return next_val;
+	}
+	bool hasNext() {
+		return inorder_values.empty() ? false : true;
+	}
+};
+void BSTIteratorDriver() {
+	TreeNode* root = new TreeNode(8);
+	TreeNode* three = new TreeNode(3);
+	TreeNode* ten = new TreeNode(10);
+	TreeNode* one = new TreeNode(1);
+	TreeNode* six = new TreeNode(6);
+	TreeNode* fourteen = new TreeNode(14);
+	TreeNode* four = new TreeNode(4);
+	TreeNode* seven = new TreeNode(7);
+	TreeNode* thirteen = new TreeNode(13);
+	root->left = three;
+	root->right = ten;
+	three->left = one;
+	three->right = six;
+	six->left = four;
+	six->right = seven;
+	ten->right = fourteen;
+	fourteen->left = thirteen;
+	printBinaryTree(root);
+
+	BSTIterator it(root);
+	cout << it.next() << "\n";
+	cout << it.next() << "\n";
+	cout << it.next() << "\n";
+	cout << it.next() << "\n";
+	cout << it.next() << "\n";
+	cout << it.next() << "\n";
+	cout << it.next() << "\n";
+	cout << it.next() << "\n";
+	cout << it.hasNext() << "\n";
+	cout << it.next() << "\n";
+	cout << it.hasNext() << "\n";
+}
+int climbStairsRecursive(int total_steps) {
+	if (total_steps <= 2)
+		return total_steps;
+	return climbStairsRecursive(total_steps - 1) + climbStairsRecursive(total_steps - 2);
+}
+int climbStairsTopDown(int total_steps,vector<int>& memo) {
+	if (total_steps <= 2)
+		return total_steps;
+	if (memo[total_steps] == 0) {
+		memo[total_steps] = climbStairsTopDown(total_steps - 1,memo) + climbStairsTopDown(total_steps - 2,memo);
+	}
+	return memo[total_steps];
+}
+int climbStairsBottomUp(int total_steps) {
+	vector<int>memo(total_steps + 1, 0);
+	memo[0] = 1;
+	memo[1] = 1;
+
+	for (auto i = 2; i <= total_steps; ++i) {
+		memo[i] = memo[i - 1] + memo[i - 2];
+	}
+	return memo[total_steps];
+}
+int climbStairsAnyNumOfSteps(int total_steps, int k_steps, vector<int>& memo) {
+	if (total_steps <= 1)
+		return 1;
+	if (memo[total_steps] == 0) {
+		for (auto i = 1; i <= k_steps && total_steps - i >= 0; ++i) {
+			memo[total_steps] = memo[total_steps] + climbStairsAnyNumOfSteps(total_steps - i, k_steps, memo);
+		}
+	}
+	return memo[total_steps];
+}
+void climbStairsDriver() {
+	cout << "climbStairsRecursive=" << climbStairsRecursive(3) << "\n";
+	vector<int>memo1(11, 0);
+	cout << "climbStairsTopDown=" << climbStairsTopDown(10,memo1) << "\n";
+	
+	cout << "climbStairsBottomUp=" << climbStairsBottomUp(10) << "\n";
+
+	vector<int>memo2(11, 0);
+	cout << "climbStairsAnyNumOfSteps=" << climbStairsAnyNumOfSteps(10,3, memo2) << "\n";
+}
+int editDistanceRecursive(string A, string B, int a_size, int b_size) {
+	if (a_size == 0)
+		return b_size;
+	if (b_size == 0)
+		return a_size;
+	//last chars are the same, keep going
+	if (A[a_size - 1] == B[b_size - 1])
+		return editDistanceRecursive(A, B, a_size - 1, b_size - 1);
+	//if not the same, consider all edits: insert, delete and replace
+	return 1 + min(editDistanceRecursive(A, B, a_size, b_size - 1),//insert
+		min(editDistanceRecursive(A, B, a_size - 1, b_size), //delete
+			editDistanceRecursive(A, B, a_size - 1, b_size - 1)));//replace
+}
+int editDistanceBottomUp(string A, string B, int a_size, int b_size) {
+	vector<vector<int>>memo(a_size + 1, vector<int>(b_size + 1));
+	for (auto i = 0; i <= a_size; ++i) {
+		for (auto j = 0; j <= b_size; ++j) {
+			//first string empty
+			if (i == 0)
+				memo[i][j] = j;
+			//second string empty
+			else if (j == 0)
+				memo[i][j] = i;
+			//last chars are the same
+			else if (A[i - 1] == B[j - 1])
+				memo[i][j] = memo[i - 1][j - 1];
+			//consider all edits: insert, remove and replace
+			else
+				memo[i][j] = 1 + min(memo[i][j - 1], min(memo[i - 1][j], memo[i - 1][j - 1]));
+			
+		}
+	}
+	return memo[a_size][b_size];
+}
+void editDistanceDriver() {
+	string s1{ "Anshuman" };
+	string s2{ "Antihuman" };
+	cout << "editDistanceRecursive=" << editDistanceRecursive(s1, s2, s1.size(), s2.size()) << '\n';
+	cout << "editDistanceTopDown=" << editDistanceBottomUp(s1, s2, s1.size(), s2.size()) << '\n';
+}
+int longestIncreasingSubsequenceRecursive(vector<int>& arr, int n, int *max_ref){
+	if (n == 1)
+		return 1;
+	// 'max_ending_here' is length of LIS ending with arr[n-1]
+	int res, max_ending_here = 1;
+	/* Recursively get all LIS ending with arr[0], arr[1] ...
+	arr[n-2]. If   arr[i-1] is smaller than arr[n-1], and
+	max ending with arr[n-1] needs to be updated, then
+	update it */
+	for (int i = 1; i < n; i++)
+	{
+		res = longestIncreasingSubsequenceRecursive(arr, i, max_ref);
+		if (arr[i - 1] < arr[n - 1] && res + 1 > max_ending_here)
+			max_ending_here = res + 1;
+	}
+
+	// Compare max_ending_here with the overall max. And
+	// update the overall max if needed
+	if (*max_ref < max_ending_here)
+		*max_ref = max_ending_here;
+
+	// Return length of LIS ending with arr[n-1]
+	return max_ending_here;
+}
+int longestIncreasingSubsequenceNLogN(vector<int>& nums) {
+	vector<int>parent(nums.size());
+	vector<int>increasingSubsequence(nums.size() + 1);
+	int len = 0,start=0,mid=0,end=0,pos=0;
+
+	for (auto i = 0; i < nums.size(); ++i) {
+		start = 1;
+		end = len;
+		while (start <= end) {
+			mid = (start + end) / 2;
+			if (nums[increasingSubsequence[mid]] < nums[i])
+				start = mid + 1;
+			else
+				end = mid - 1;
+		}
+		pos = start;
+		parent[i] = increasingSubsequence[pos - 1];
+		increasingSubsequence[pos] = i;
+		if (pos > len)
+			len = pos;
+	}
+	return len;
+}
+void longestIncreasingSubsequenceDriver() {
+	vector<int>nums{ 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15 };
+	int max = 1;
+	cout << "longestIncreasingSubsequenceRecursive=" << longestIncreasingSubsequenceRecursive(nums, nums.size(), &max) << '\n';
+	cout << "longestIncreasingSubsequenceNLogN=" << longestIncreasingSubsequenceNLogN(nums) << '\n';
+}
+int canJumpRecursive(vector<int> &nums, int start, int end) {
+	//destination same as source
+	if (start == end)
+		return 0;
+	//nothing reachable
+	if (nums[start] == 0)
+		return INT_MAX;
+	//traverse all reachable points
+	int min = INT_MAX;
+	int jumps = 0;
+	for (auto i = start + 1; i <= end && i <= start + nums[start]; ++i) {
+		jumps = canJumpRecursive(nums, i, end);
+		if (jumps != INT_MAX && jumps + 1 < min)
+			min = jumps + 1;
+	}
+	return min;
+}
+int canJumpN(vector<int>& nums) {
+	if (nums.size() <= 1)
+		return 1;
+	if (nums[0] == 0)
+		return 0;
+
+	int max_reach = nums[0];
+	int step = nums[0];
+	int jump = 1;
+	
+	for (auto i = 1; i < nums.size(); ++i) {
+		//made it to the end
+		if (i == nums.size() - 1)
+			return 1;
+		max_reach = max(max_reach, i + nums[i]);
+		--step;
+		if (step == 0) {
+			++jump;
+			if (i >= max_reach)
+				return 0;
+			step = max_reach - i;
+		}
+	}
+	return 0;
+}
+void canJumpDriver() {
+	vector<int>nums1{ 2,3,1,1,4 };
+	vector<int>nums2{ 3,2,1,0,4 };
+	cout << "canJumpRecursive(1)=" << canJumpRecursive(nums1,0,nums1.size()-1) << '\n';
+	if(canJumpRecursive(nums2, 0, nums2.size() - 1) == INT_MAX)
+		cout << "nums2(0)\n" ;
+	cout << "canJumpN(1)=" << canJumpN(nums1) << '\n';
+	cout << "canJumpN(0)=" << canJumpN(nums2) << '\n';
+}
+int maxRectangleInMatrix(vector<vector<int>>& matrix) {
+	//does not work for all cases
+	if (matrix.empty())
+		return 0;
+	int rows = matrix.size();
+	int cols = matrix[0].size();
+	vector<vector<int>>aux(rows, vector<int>(cols));
+	//set first row
+	for (auto i = 0; i < cols; ++i)
+		aux[0][i] = matrix[0][i];
+	//set first col
+	for (auto i = 0; i < rows; ++i)
+		aux[i][0] = matrix[i][0];
+	//set rest
+	for (auto i = 1; i < rows; ++i) {
+		for (auto j = 1; j < cols; ++j) {
+			if (matrix[i][j] == 1)
+				aux[i][j] = min(aux[i][j - 1], min(aux[i - 1][j], aux[i - 1][j - 1])) + 1;
+			else
+				aux[i][j] = 0;
+		}
+	}
+	//find max
+	int max_rect = aux[0][0];
+	for (auto i = 0; i < rows; ++i) {
+		for (auto j = 0; j < rows; ++j) {
+			max_rect = max(max_rect, aux[i][j]);
+		}
+	}
+	return max_rect * max_rect;
+}
+void maxRectangleInMatrixDriver() {
+	vector<vector<int>>matrix{ {1,1,1},{0,1,1},{1,0,0} };
+	cout << "maxRectangleInMatrix=" << maxRectangleInMatrix(matrix) << '\n';
+}
+vector<int> rodCut(int A, vector<int> &B) {
+	return {};
+}
+void rodCutDriver() {
+
+}
+int nDigitNumsWithSumRecursiveHelper(int digits, int sum) {
+	//if no digits and sum is zero then there would
+	//technically be one way of getting 0
+	if (digits == 0)
+		return sum == 0;
+	//only one way to get zero
+	if (sum == 0)
+		return 1;
+	//traverse all
+	long long int answer = 0;
+	for (auto i = 0; i <= 9; ++i) {
+		if (sum - i >= 0)
+			answer = answer + nDigitNumsWithSumRecursiveHelper(digits - 1, sum - i);
+	}
+	return answer;
+}
+int nDigitNumsWithSumRecursive(int digits, int sum) {
+	long long int answer = 0;
+	for (auto i = 1; i <= 9; ++i) {
+		if (sum - i >= 0)
+			answer = answer + nDigitNumsWithSumRecursiveHelper(digits - 1, sum - i);
+	}
+	return answer;
+}
+int nDigitNumsWithSumTopDownHelper(int digits, int sum, vector<vector<int>>& memo) {
+	if (digits == 0)
+		return sum == 0;
+	if (memo[digits][sum] == 0) {
+		long long int answer = 0;
+		for (auto i = 0; i <= 9; ++i) {
+			if (sum - i >= 0)
+				answer = answer + nDigitNumsWithSumTopDownHelper(digits - 1, sum - i, memo);
+		}
+		//mod it for really large inputs
+		memo[digits][sum] = answer % 1000000007;
+	}
+	return memo[digits][sum];
+}
+int nDigitNumsWithSumTopDown(int digits, int sum) {
+	//wrapper function to take care of leading zeroes
+	vector<vector<int>>memo(digits + 1, vector<int>(sum + 1, 0));
+	long long int answer = 0;
+	for (auto i = 1; i <= 9; ++i) {
+		if (sum - i >= 0)
+			answer = answer + nDigitNumsWithSumTopDownHelper(digits - 1, sum - i, memo);
+	}
+	//mod it for really large inputs
+	return answer % 1000000007;
+}
+void nDigitNumsWithSumDriver() {
+	cout << "nDigitNumsWithSum=" << nDigitNumsWithSumRecursive(3, 5) << '\n';
+	cout << "nDigitNumsWithSumTopDown=" << nDigitNumsWithSumTopDown(3, 5) << '\n';
+}
+int longestValidParenthesesBottomUp(string& word) {
+	vector<int>memo(word.size(), 0);
+	int len = 0;
+	int index = 0;
+	for (auto i = 1; i < word.size(); ++i) {
+		if (word[i] == ')') {
+			if (word[i - 1] == '(') {
+				memo[i] = 2;
+				if (i >= 2)
+					memo[i] = memo[i] + memo[i - 2];
+			}
+			else {
+				index = i - memo[i - 1] - 1;
+				if (index >= 0 && word[index] == '(') {
+					memo[i] = memo[i - 1] + 2;
+					if (index > 0)
+						memo[i] = memo[i] + memo[index - 1];
+				}
+			}
+		}
+		len = max(len, memo[i]);
+	}
+	return len;
+}
+void longestValidParenthesesBottomUpDriver() {
+	string s{ "(()" };
+	cout << "longestValidParenthesesBottomUp=" << longestValidParenthesesBottomUp(s) << '\n';
+}
+int maxProfit(const vector<int> &A) {
+	if (A.empty())
+		return 0;
+	int investment = A[0];
+	int profit = 0;
+	for (auto i = 1; i < A.size(); ++i) {
+		if (investment < A[i])
+			profit = profit + A[i] - investment;
+		investment = A[i];
+	}
+	return profit;
+}
+void maxProfitDriver() {
+	vector<int>nums{ 7551982, 8124939, 4023780, 7868369, 4412570, 2542961, 7380261, 1164290, 7781065, 1164599, 2563492, 5354415, 4994454, 2627136, 5933501, 668219, 1821804, 7818378, 33654, 4167689, 8652323, 5750640, 9822437, 3466466, 554089, 6168826, 335687, 2466661, 8511732, 6288553, 2905889, 7747975, 3744045, 1545003, 1008624, 8041203, 7176125, 4321092, 714053, 7200073, 166697, 7814651, 3090485, 8318668, 6600364, 3352620, 2430137, 7685821, 1442555, 828955, 6540266, 5305436, 116568, 1883410, 7975347, 9629015, 4735259, 6559041, 1832532, 5840170, 6983732, 5886179, 1496505, 7241412, 144558, 9462840, 8579314, 2488436, 9677478, 7589124, 5636642, 2440601, 1767332, 2399786, 6299635, 8534665, 1367339, 805592, 5572668, 6990026, 8465261, 4808596, 7641452, 8464860, 3170126, 7403200, 6932907, 3776122, 1313688, 3992189, 2382116, 3886952, 349816, 1596435, 7353742, 9964868, 9882224, 3818546, 3885458, 1200559, 3910256, 7949895, 463872, 6392805, 9513226, 3427933, 3470571, 6225817, 552452, 5567651, 6414423, 6701681, 4725847, 894529, 8046603, 426263, 5280891, 9197661, 9764507, 1740413, 9530261, 9163599, 7561587, 5848442, 7312422, 4794268, 5793465, 5039382, 5147388, 7346933, 4697363, 6436473, 5159752, 2207985, 8256403, 8958858, 6099618, 2172252, 3063342, 4324166, 3919237, 8985768, 2703255, 2386343, 3064166, 247762, 7271683, 1812487, 7163753, 4635382, 449426, 2561592, 3746615, 8741199, 6696192, 606265, 5374062, 3065308, 6918398, 2956279, 8949324, 2804580, 3421479, 7846658, 8895839, 8277589, 1262596, 451779, 9972218, 6378556, 4216958, 7127258, 8593578, 326883, 4737513, 6578257, 7582654, 8675499, 9038961, 7902676, 8874020, 5513073, 631930, 912719, 8394492, 1508363, 455175, 9215635, 6813970, 2021710, 5673212, 184474, 4511247, 4653238, 2218883, 9669544, 295018, 3694660, 1709444, 4019025, 5047809, 45740, 1035395, 8159408, 1557286, 1304144, 6496263, 2094202, 9945315, 1905585, 1143081, 6994125, 9609830, 1077628, 3488222, 6299366, 7187139, 3883908, 7077292, 3210807, 7328762, 7695314, 1138834, 7689433, 5083719, 202831, 8138452, 5495064, 7543763, 1597085, 5429837, 8455839, 6925605, 6600884, 3571512, 3422637, 8911245, 3700762, 2338168, 6830853, 2539094, 490627, 2294717, 497349, 8297867, 7299269, 4769134, 285033, 4335917, 9908413, 152868, 2658658, 3525848, 1884044, 4953877, 8660374, 8989154, 888731, 7217408, 2614940, 7990455, 9779818, 1441488, 9605891, 4518756, 3705442, 9331226, 404585, 9011202, 7355000, 7461968, 6512552, 2689841, 2873446, 256454, 1068037, 8786859, 2323599, 3332506, 2361155, 7476810, 5605915, 5950352, 6491737, 8696129, 4637800, 4207476, 9334774, 840248, 9159149, 5201180, 7211332, 3135016, 8524857, 4566111, 7697488, 1833291, 7227481, 8289951, 2389102, 9102789, 8585135, 1869227, 4082835, 8447466, 4985240, 4176179 };
+	cout << "maxProfit=" << maxProfit(nums) << '\n';
+	cout << INT_MIN - INT_MAX << '\n';
+}
+int findCatalanNumRecursive(int n) {
+	if (n <= 1)
+		return 1;
+	int res = 0;
+	for (auto i = 0; i < n; ++i) {
+		res = res + findCatalanNumRecursive(i) * findCatalanNumRecursive(n - i - 1);
+	}
+	return res;
+}
+int findCatalanNumTopDown(int n, vector<int>& memo) {
+	if (n <= 1)
+		return 1;
+	if (memo[n] == 0) {
+		for (auto i = 0; i < n; ++i) {
+			memo[n] = memo[n] + findCatalanNumTopDown(i,memo) * findCatalanNumTopDown(n - i - 1,memo);
+		}
+	}
+	return memo[n];
+}
+int uniqueBinarySearchTrees(int A) {
+	return findCatalanNumRecursive(A);
+}
+void uniqueBinarySearchTreesDriver() {
+	cout << "uniqueBinarySearchTrees=" << uniqueBinarySearchTrees(3) << '\n';
+	vector<int>memo(4);
+	cout << "findCatalanNumTopDown=" << findCatalanNumTopDown(3,memo) << '\n';
+}
 
 int main(int argc, char** argv) {
 	
@@ -2539,7 +3109,6 @@ int main(int argc, char** argv) {
 	//minWindowDriver();
 	//mergeKSortedListsDriver();
 	//LeastRecentlyUsedDriver();
-
 	//distinctNumbersDriver();
 	//isValidBSTDriver();
 	//inOrderDriver();
@@ -2552,6 +3121,23 @@ int main(int argc, char** argv) {
 	//identicalThreesDriver();
 	//isSymmetricDriver();
 	//leastCommonAncestorDriver();
+
+	//shortestUniquePrefixDriver();
+	//flattenBinaryTreeToListDriver();
+	//buildTreePreorderInorderDriver();
+	//kthsmallestDriver();
+	//BSTIteratorDriver();
+	//climbStairsDriver();
+	//editDistanceDriver();
+	//longestIncreasingSubsequenceDriver();
+	//canJumpDriver();
+	//maxRectangleInMatrixDriver();
+	//rodCutDriver();
+	//nDigitNumsWithSumDriver();
+	//longestValidParenthesesBottomUpDriver();
+	//maxProfitDriver();
+	//uniqueBinarySearchTreesDriver();
+
 
 	return 0;
 }
