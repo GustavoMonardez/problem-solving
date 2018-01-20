@@ -6,8 +6,10 @@
 #include <queue>
 #include <deque>
 #include <map>
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 using namespace std;
 
@@ -3051,6 +3053,499 @@ void uniqueBinarySearchTreesDriver() {
 	vector<int>memo(4);
 	cout << "findCatalanNumTopDown=" << findCatalanNumTopDown(3,memo) << '\n';
 }
+int maxProduct(const vector<int> &A) {
+	/*int ans=A[0],j=A[0];
+    vector<int> v;
+    int i;
+    for(i=0;i<A.size();i++){
+        if(A[i]!=0)
+            v.push_back(A[i]);
+        else{
+            j=0;
+            if(v.size()>0)
+                ans=max(ans,B(v));
+            v.clear();
+        }
+    }
+    if(v.size()>0)
+        ans=max(ans,B(v));
+    return max(ans,j);*/
+	//DOES not work
+	int curr_max = 1;
+	int curr_min = 1;
+	int max_prod = 1;
+
+	for (auto i = 0; i < A.size(); ++i) {
+		if (A[i] > 0) {
+			curr_max = curr_max * A[i];
+			curr_min = min(curr_min * A[i], 1);
+		}
+		else if (A[i] == 0) {
+			curr_max = 1;
+			curr_min = 1;
+		}
+		else {
+			int temp = curr_max;
+			curr_max = max(curr_min * A[i], 1);
+			curr_min = temp * A[i];
+		}
+		//update max prod if needed
+		max_prod = curr_max > max_prod ? curr_max : max_prod;
+	}
+	return max_prod;
+}
+void maxProductDriver() {
+	vector<int>nums{ 2, 3, -2, 4 };
+	cout << "maxProduct=" << maxProduct(nums) << '\n';
+}
+int maxSumWithoutAdjacentElements(vector<vector<int>> &A) {
+	if (A.empty())
+		return 0;
+	//choose max element of first column
+	int included = max(A[0][0], A[1][0]);
+	//exluding element of first column
+	int excluded = 0, excluded_new = 0;
+	//traverse rest
+	for (auto i = 1; i < A[0].size(); ++i) {
+		excluded_new = max(included, excluded);
+		included = excluded + max(A[0][i], A[1][i]);
+		excluded = excluded_new;
+	}
+	return max(included, excluded);
+}
+void maxSumWithoutAdjacentElementsDriver() {
+	vector<vector<int>>matrix{ {1, 2, 3, 4},{2, 3, 4, 5 } };
+	cout << "maxSumWithoutAdjacentElements=" << maxSumWithoutAdjacentElements(matrix) << '\n';
+}
+int majorityElement(vector<int>& nums) {
+	unordered_map<int, int>map;
+	for (auto num : nums) {
+		++map[num];
+	}
+	int max_freq = 0;
+	int max_val = 0;
+	for (auto it = map.begin(); it != map.end(); ++it) {
+		if (it->second > max_freq) {
+			max_freq = it->second;
+			max_val = it->first;
+		}
+	}
+	return max_val;
+}
+void majorityElementDriver() {
+	vector<int>nums{ 2,1,2 };
+	cout << "majorityElement=" << majorityElement(nums) << '\n';
+}
+int gasStation(vector<int>& gas, vector<int>& cost) {
+	int sumGas = 0;
+	int sumCost = 0;
+	int start = 0;
+	int tank = 0;
+
+	for (int i = 0; i < gas.size(); i++) {
+		sumGas += gas[i];
+		sumCost += cost[i];
+		tank += gas[i] - cost[i];
+
+		if (tank < 0) {
+			start = i + 1;
+			tank = 0;
+		}
+	}
+	if (sumGas < sumCost)
+		return -1;
+	else
+		return start;
+	/*
+	int start = 0;
+	int end = 1;
+	int curr_gas = gas[start] - cost[start];
+
+	while (start != end || curr_gas < 0) {
+		//if we didn't make it, remove route
+		while (curr_gas < 0 && start != end) {
+			curr_gas = curr_gas - gas[start] - cost[start];
+			start = (start + 1) % gas.size();
+			//no possible route
+			if (start == 0)
+				return -1;
+		}
+		curr_gas = curr_gas + gas[end] - cost[end];
+		end = (end + 1) % gas.size();
+	}
+	return start;*/
+}
+void gasStationDriver() {
+	vector<int>gas{ 1,2 };
+	vector<int>cost{ 2,1 };
+	cout << "gasStation=" << gasStation(gas, cost) << '\n';
+}
+int asssignMiceToHoles(vector<int> &mice, vector<int> &holes) {
+	if (mice.size() != holes.size())
+		return -1;
+	//align mice to holes as close as possible
+	//by sorting both arrays
+	sort(mice.begin(), mice.end());
+	sort(holes.begin(), holes.end());
+	//find the max difference among mice and holes
+	int max_time = 0;
+	for (auto i = 0; i < mice.size(); ++i) {
+		if (max_time < abs(mice[i] - holes[i]))
+			max_time = abs(mice[i] - holes[i]);
+	}
+	//the max difference represents the longest
+	//a mouse will take to get to its hole
+	return max_time;
+}
+void asssignMiceToHolesDriver() {
+	vector<int>mice{ 4,-4,2 };
+	vector<int>holes{ 4,0,5 };
+	cout << "asssignMiceToHoles=" << asssignMiceToHoles(mice, holes) << '\n';
+}
+int highestProduct(vector<int>& nums) {
+	if (nums.size() < 3)
+		return -1;
+	if (nums.size() == 3)
+		return nums[0] * nums[1] * nums[2];
+	sort(nums.begin(), nums.end());
+	int end = nums.size() - 1;
+	return nums[end] * nums[end-1] * nums[end-2];
+}
+void highestProductDriver() {
+	vector<int>nums{ 0,-1,3,100,70,50 };
+	cout << "highestProduct=" << highestProduct(nums) << '\n';
+}
+vector<vector<int>> levelOrder(TreeNode* A) {
+	if (A == NULL)
+		return { {} };
+
+	vector<vector<int>>level_order;
+	queue<TreeNode*>q;
+	vector<int>level_values;
+	queue<int>level;
+	TreeNode* curr = A;
+	int curr_level = 0;
+
+	q.push(curr);
+	level.push(0);
+
+	while (!q.empty()) {
+		curr = q.front();
+		curr_level = level.front();
+		//moving to the next level
+		if (level_order.size() != level.front() + 1)
+			level_order.push_back(level_values);
+
+		level_order[curr_level].push_back(curr->val);
+
+		if (curr->left) {
+			q.push(curr->left);
+			level.push(curr_level + 1);
+		}
+		if (curr->right) {
+			q.push(curr->right);
+			level.push(curr_level + 1);
+		}
+		q.pop();
+		level.pop();
+	}
+	return level_order;
+}
+void levelOrderDriver() {
+	TreeNode* root = new TreeNode(3);
+	TreeNode* nine = new TreeNode(9);
+	TreeNode* twenty = new TreeNode(20);
+	TreeNode* fifteen = new TreeNode(15);
+	TreeNode* seven = new TreeNode(7);
+	root->left = nine;
+	root->right = twenty;
+	twenty->left = fifteen;
+	twenty->right = seven;
+	print2DVector(levelOrder(root));
+}
+int minSumOfFibonacci(int n) {
+	vector<int>fib;
+	int count = 0;
+	int a = 1, b = 1, temp=0;
+
+	while (a <= n) {
+		fib.push_back(a);
+		temp = a + b;
+		a = b;
+		b = temp;
+	}
+	int num = 0;
+	for (auto i = fib.size() - 1; i >= 0; --i) {
+		num = fib[i];
+		while (num <= n) {
+			n = n - num;
+			++count;
+		}
+		if (n == 0)
+			break;
+	}
+	return count;
+}
+void minSumOfFibonacciDriver() {
+	cout << "minSumOfFibonacci=" << minSumOfFibonacci(4) << '\n';
+}
+struct UndirectedGraphNode {
+	int label;
+	vector<UndirectedGraphNode *> neighbors;
+	UndirectedGraphNode(int x) : label(x) {};
+};
+UndirectedGraphNode *cloneGraph(UndirectedGraphNode *source) {
+	if (source == NULL)
+		return NULL;
+	unordered_map<UndirectedGraphNode*, UndirectedGraphNode*>map;
+	queue<UndirectedGraphNode*>q;
+	q.push(source);
+	UndirectedGraphNode* node = new UndirectedGraphNode(source->label);
+	map[source] = node;
+	UndirectedGraphNode* curr = NULL;
+
+	while (!q.empty()) {
+		curr = q.front(); q.pop();
+		vector<UndirectedGraphNode*> neighbors = curr->neighbors;
+		for (auto i = 0; i < neighbors.size(); ++i) {
+			//if not cloned yet
+			if (map[neighbors[i]] == NULL) {
+				node = new UndirectedGraphNode(neighbors[i]->label);
+				map[neighbors[i]] = node;
+				q.push(neighbors[i]);
+			}
+			//add neighbors to cloned graph
+			map[curr]->neighbors.push_back(map[neighbors[i]]);
+		}
+	}
+	//returned cloned graph
+	return map[source];
+}
+void breadthFirstGraphTraversal(UndirectedGraphNode* source) {
+	if (source == NULL)
+		return;
+	unordered_map<UndirectedGraphNode*, bool>visited;
+	queue<UndirectedGraphNode*>q;
+	q.push(source);
+	visited[source] = true;
+	UndirectedGraphNode* curr = NULL;
+
+	while (!q.empty()) {
+		curr = q.front(); q.pop();
+		cout << curr->label << "->" << curr << '\n';
+		vector<UndirectedGraphNode*>n = curr->neighbors;
+		for (auto i = 0; i < n.size(); ++i) {
+			if (!visited[n[i]]) {
+				visited[n[i]] = true;
+				q.push(n[i]);
+			}
+		}
+	}
+	cout << '\n';
+}
+void clonedGraphDriver() {
+	UndirectedGraphNode *node1 = new UndirectedGraphNode(1);
+	UndirectedGraphNode *node2 = new UndirectedGraphNode(2);
+	UndirectedGraphNode *node3 = new UndirectedGraphNode(3);
+	UndirectedGraphNode *node4 = new UndirectedGraphNode(4);
+	vector<UndirectedGraphNode *> v;
+	v.push_back(node2);
+	v.push_back(node4);
+	node1->neighbors = v;
+	v.clear();
+	v.push_back(node1);
+	v.push_back(node3);
+	node2->neighbors = v;
+	v.clear();
+	v.push_back(node2);
+	v.push_back(node4);
+	node3->neighbors = v;
+	v.clear();
+	v.push_back(node3);
+	v.push_back(node1);
+	node4->neighbors = v;
+	breadthFirstGraphTraversal(node1);
+
+	UndirectedGraphNode* clone = cloneGraph(node1);
+	breadthFirstGraphTraversal(clone);
+}
+struct Point {
+	int x;
+	int y;
+};
+bool isValidIndex(vector<int> &E, vector<int> &F,int r,int x, int y) {
+	for (auto i = 0; i < E.size(); ++i) {
+		int x1 = E[i];
+		int x2 = F[i];
+		if ((x == x1) && (y == x2))
+			return false;
+		int n = (x1 - x) * (x1 - x) + (x2 - y) * (x2 - y);
+		if (n <= r)
+			return false;
+	}
+	return true;
+}
+string validPath(int A, int B, int C, int D, vector<int> &E, vector<int> &F) {
+	vector<vector<int>>dp(A + 1, vector<int>(B + 1));
+	for (auto i = 0; i <= A; ++i) {
+		for (auto j = 0; j <= B; ++j) {
+			dp[i][j] = -1;
+		}
+	}
+	dp[0][0] = 1;
+	int r = D*D;
+	queue<Point>q;
+	Point curr;
+	curr.x = 0; curr.y = 0;
+	q.push(curr);
+
+	vector<int> a1 = { 1,1,1,0,-1,-1,-1,0 };
+	vector<int> a2 = { -1,0,1,1,1,0,-1,-1 };
+
+	while (!q.empty()) {
+		curr = q.front(); q.pop();
+		int x1 = curr.x;
+		int x2 = curr.y;
+
+		for (auto i = 0; i < 8; ++i) {
+			int t1 = x1 + a1[i];
+			int t2 = x2 + a2[i];
+			if ((t1 >= 0) && (t1 <= A) && (t2 >= 0) && (t2 <= B)) {
+				if (dp[t1][t2] == -1) {
+					if (!isValidIndex(E,F,r,t1, t2)) {
+						dp[t1][t2] = 2;
+					}
+					else {
+						dp[t1][t2] = 1;
+						Point p;
+						p.x = t1;
+						p.y = t2;
+						q.push(p);
+					}
+				}
+			}
+		}
+		if (dp[A][B] != -1)
+			break;
+	}
+	if (dp[A][B] == 1)
+		return "YES";
+	return "NO";
+}
+void validPathDriver() {
+
+}
+bool isadjacent(string& a, string& b)
+{
+	int count = 0;  // to store count of differences
+	int n = a.length();
+
+	// Iterate through all characters and return false
+	// if there are more than one mismatching characters
+	for (int i = 0; i < n; i++)
+	{
+		if (a[i] != b[i]) count++;
+		if (count > 1) return false;
+	}
+	return count == 1 ? true : false;
+}
+struct QItem{
+	string word;
+	int len;
+};
+int ladderLength(string& start, string& target, set<string> &D){
+	//copied from gfg and does not work
+	// Create a queue for BFS and insert 'start' as source vertex
+	queue<QItem> Q;
+	QItem item = { start, 1 };  // Chain length for start word is 1
+	Q.push(item);
+
+	// While queue is not empty
+	while (!Q.empty())
+	{
+		// Take the front word
+		QItem curr = Q.front();
+		Q.pop();
+
+		// Go through all words of dictionary
+		for (set<string>::iterator it = D.begin(); it != D.end(); it++)
+		{
+			// Process a dictionary word if it is adjacent to current
+			// word (or vertex) of BFS
+			string temp = *it;
+			if (isadjacent(curr.word, temp))
+			{
+				// Add the dictionary word to Q
+				item.word = temp;
+				item.len = curr.len + 1;
+				Q.push(item);
+
+				// Remove from dictionary so that this word is not
+				// processed again.  This is like marking visited
+				D.erase(temp);
+
+				// If we reached target
+				if (temp == target)
+					return item.len;
+			}
+		}
+	}
+	return 0;
+}
+void ladderLengthDriver() {
+	string start{ "hit" };
+	string end{ "cog" };
+	set<string>dict;
+	dict.insert("hot");
+	dict.insert("dot");
+	dict.insert("dog");
+	dict.insert("lot");
+	dict.insert("log");
+	cout << "ladderLength=" << ladderLength(start, end, dict) << '\n';
+}
+vector<string>m;
+string v;
+bool ok;
+int n, c;
+int dx[] = { 1,-1,0,0 };
+int dy[] = { 0,0,1,-1 };
+void solve(int i, int x, int y) {
+	if (ok)return;
+	if (i == v.size()) {
+		ok = true;
+		return;
+	}
+	for (int j = 0; j<4; j++) {
+		if (x + dx[j] >= n || x + dx[j]<0 || y + dy[j] >= c || y + dy[j]<0)continue;
+		if (m[x + dx[j]][y + dy[j]] == v[i])solve(i + 1, x + dx[j], y + dy[j]);
+	}
+}
+int wordSearchBoard(vector<string> &A, string B) {
+	ok = false;
+	n = A.size();
+	c = A[0].size();
+	m = A;
+	v = B;
+	for (int i = 0; i<A.size(); i++) {
+		for (int j = 0; j<A[0].size(); j++) {
+			if (A[i][j] == v[0])solve(1, i, j);
+		}
+	}
+	return ok;
+}
+void wordSearchBoardDriver() {
+	vector<string>board{ {"ABCE"},{"SFCS"},{"ADEE"} };
+	string word1{ "ABCCED" };
+	string word2{ "SEE" };
+	string word3{ "ABCB" };
+	string word4{ "ABFSAB" };
+	string word5{ "ABCD" };
+	cout << "wordSearchBoard(1)=" << wordSearchBoard(board, word1) << '\n';
+	cout << "wordSearchBoard(1)=" << wordSearchBoard(board, word2) << '\n';
+	cout << "wordSearchBoard(1)=" << wordSearchBoard(board, word3) << '\n';
+	cout << "wordSearchBoard(1)=" << wordSearchBoard(board, word4) << '\n';
+	cout << "wordSearchBoard(0)=" << wordSearchBoard(board, word5) << '\n';
+}
 
 int main(int argc, char** argv) {
 	
@@ -3121,7 +3616,6 @@ int main(int argc, char** argv) {
 	//identicalThreesDriver();
 	//isSymmetricDriver();
 	//leastCommonAncestorDriver();
-
 	//shortestUniquePrefixDriver();
 	//flattenBinaryTreeToListDriver();
 	//buildTreePreorderInorderDriver();
@@ -3137,7 +3631,18 @@ int main(int argc, char** argv) {
 	//longestValidParenthesesBottomUpDriver();
 	//maxProfitDriver();
 	//uniqueBinarySearchTreesDriver();
-
+	//maxProductDriver();
+	//maxSumWithoutAdjacentElementsDriver();
+	//majorityElementDriver();
+	//gasStationDriver();
+	//asssignMiceToHolesDriver();
+	//highestProductDriver();
+	//levelOrderDriver();
+	//minSumOfFibonacciDriver();
+	//clonedGraphDriver();
+	//validPathDriver();
+	//ladderLengthDriver();
+	//wordSearchBoardDriver();
 
 	return 0;
 }
